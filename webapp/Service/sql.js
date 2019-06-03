@@ -23,6 +23,16 @@ class SQL {
         let sql = `INSERT INTO book(id,title,author,isbn,quantity) VALUES('${uuidv4()}','${title}','${author}','${isbn}','${quantity}')`;
         return sql;
     }
+
+    getAllBookSQL(){
+        let sql =  `SELECT * FROM book`;
+        return sql;
+    }
+
+    getupdateBookSQL(bookID, title,author,isbn,quantity){
+        let sql = `UPDATE book SET  title = '${title}', author = '${author}', isbn = '${isbn}', quantity = '${quantity}' where id='${bookID}'`;
+        return sql;
+    }
 }
 
 module.exports = SQL;
