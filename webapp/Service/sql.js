@@ -23,6 +23,16 @@ class SQL {
         let sql = `INSERT INTO book(id,title,author,isbn,quantity) VALUES('${uuidv4()}','${title}','${author}','${isbn}','${quantity}')`;
         return sql;
     }
+
+    getBookById(id){
+        let sql = `SELECT * FROM book where id='${id}'`;
+        return sql;
+    }
+
+    deleteBookById(id){
+        let sql = `DELETE FROM book where id='${id}'`;
+        return sql;
+    }
 }
 
 module.exports = SQL;
