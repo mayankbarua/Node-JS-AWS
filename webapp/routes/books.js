@@ -11,10 +11,19 @@ router.post('/',authorization.checkAccess ,function(req, res, next) {
     let author = req.body.author;
     let isbn = req.body.isbn;
     let quantity = req.body.quantity;
+    if(title != null && author != null && isbn !=null && quantity>=1){
     sql.query(sqlStatement.getAddBookSQL(title,author,isbn,quantity), function (err, result, fields) {
-        if (err) throw err;
-        res.status(201).json(result);
-    });
+        if (err)
+            res.status(500).json({
+                messgae:"SQL error"
+            });
+        else
+            res.status(201).json(result);
+    });}else{
+        res.status(400).json({
+            messgae:"Bad Request : Please enter all details"
+        });
+    }
 });
 
 module.exports = router;
