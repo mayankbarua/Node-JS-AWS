@@ -19,8 +19,8 @@ class SQL {
         return sql;
     }
 
-    getAddBookSQL(title,author,isbn,quantity){
-        let sql = `INSERT INTO book(id,title,author,isbn,quantity) VALUES('${uuidv4()}','${title}','${author}','${isbn}','${quantity}')`;
+    getAddBookSQL(id,title,author,isbn,quantity){
+        let sql = `INSERT INTO book(id,title,author,isbn,quantity) VALUES('${id}','${title}','${author}','${isbn}','${quantity}')`;
         return sql;
     }
 

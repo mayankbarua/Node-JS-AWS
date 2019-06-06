@@ -11,9 +11,8 @@ const validator = new Validator();
 
 
 router.get('/', authorization.checkAccess, function (req,res,next){
-  console.log("From GET");
   res.status(200).json({
-    "message":"Success"
+    "message":"Hello... Today's date is : "+new Date()
   });
 });
 
@@ -21,38 +20,42 @@ router.get('/', authorization.checkAccess, function (req,res,next){
 router.post('/users/register',function(req, res, next) {
   let username = req.body.username;
   let password = req.body.password;
-  if(validator.validateEmail(username)){
-    if(validator.validatePassword(password)){
-      sql.query(sqlStatement.getUserByEmail(username),function(err,result,fields){
-        if (err){
-          throw err;
-          res.status(200).json(result);
-        }
-        else{
-          if(result[0] == null) {
-
-            sql.query(sqlStatement.getAddUserSQL(username, password), function (err, result, fields) {
-              if (err) throw err;
-              res.status(200).json({
-                "status":"200",
-                "messgae" : "Account Created Successfully"
-              });
-            });
-
-          }else{
-            res.status(409).json({
-              "status": 409, "error": "User name already exists"
-            })
+  if(username !=null && password !=null){
+    if(validator.validateEmail(username)){
+      if(validator.validatePassword(password)){
+        sql.query(sqlStatement.getUserByEmail(username),function(err,result,fields){
+          if (err){
+            throw err;
+            res.status(200).json(result);
           }
-        }
-      })}else{
-      res.status(409).json({
-        "status": 409, "error": "Password is not strong enough"
+          else{
+            if(result[0] == null) {
+
+              sql.query(sqlStatement.getAddUserSQL(username, password), function (err, result, fields) {
+                if (err) throw err;
+                res.status(201).json({
+                  "message" : "Account Created Successfully"
+                });
+              });
+
+            }else{
+              res.status(409).json({
+                "message": "User name already exists"
+              })
+            }
+          }
+        })}else{
+        res.status(400).json({
+          "message": "Password is not strong enough"
+        })
+      }
+    } else{
+      res.status(400).json({
+        "message": "Invalid Email Id"
       })
-    }
-  } else{
-    res.status(403).json({
-      "status": 409, "error": "Invalid Email Id"
+    }}else{
+    res.status(422).json({
+      message:"Please enter all details"
     })
   }
 });
