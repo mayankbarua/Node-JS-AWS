@@ -24,6 +24,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+/.idea
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -46,6 +47,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+/.idea
 
 # Translations
 *.mo
@@ -102,3 +104,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+package-lock.json
