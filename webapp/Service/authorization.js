@@ -15,21 +15,27 @@ let checkAccess = (req, res, next) =>{
         let creds = plain_auth.split(':');
         let username = creds[0];
         let password = creds[1];
-        sql.query(sqlStatement.getUserByEmail(username),function (err,result,fields) {
-            if(result[0] == null){
-                return res.status(401).json({
-                    message: 'Unauthorized : Invalid Username'
-                })
-            }else{
-                if(bcrypt.compareSync(password, result[0].password)){
-                    next();
-                }else {
+        if(username!=""&& password!="") {
+            sql.query(sqlStatement.getUserByEmail(username), function (err, result, fields) {
+                if (result[0] == null) {
                     return res.status(401).json({
-                        message: 'Unauthorized : Invalid Password'
-                    });
+                        message: 'Unauthorized : Invalid Username'
+                    })
+                } else {
+                    if (bcrypt.compareSync(password, result[0].password)) {
+                        next();
+                    } else {
+                        return res.status(401).json({
+                            message: 'Unauthorized : Invalid Password'
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }else{
+            res.status(400).json({
+                message:"Please enter all details"
+            })
+        }
     }
 }
 
