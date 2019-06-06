@@ -47,13 +47,13 @@ router.put('/',authorization.checkAccess ,function(req, res, next) {
                 });
             }else {
                 if(result.changedRows!=0){
-                    res.status(200).json({
+                    res.status(204).json({
                         message:"Updated Successfully",
                         data: result
                     });
                 }else{
-                    res.status(204).json({
-                        message:"No content available foterr entered book id"
+                    res.status(400).json({
+                        message:"No content available for entered book id"
                     });
                 }
 
