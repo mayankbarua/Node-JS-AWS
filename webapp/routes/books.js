@@ -111,7 +111,7 @@ router.put('/',authorization.checkAccess ,function(req, res, next) {
                     });
                 }else{
                     res.status(400).json({
-                        message:"No content available for entered book id"
+                        message:"No content available for entered book id or No changes"
                     });
                 }
 
