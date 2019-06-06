@@ -7,7 +7,7 @@ const sqlStatement = new SQL();
 let checkAccess = (req, res, next) =>{
     let auth = req.headers['authorization'];
     if(!auth) {
-        res.status(400).json({ "message": "Please login"});
+        res.status(401).json({ "message": "Please login"});
     }else if(auth) {
         let tmp = auth.split(' ');
         let buf = new Buffer(tmp[1], 'base64');
