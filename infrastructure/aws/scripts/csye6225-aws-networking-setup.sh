@@ -32,6 +32,7 @@ then
     #Waiting util VPC is created
     aws ec2 wait vpc-available --vpc-ids "$vpcId"
 	echo "VPC Created, ID : "$vpcId
+	aws ec2 create-tags --resources "$vpcId" --tags Key=Name,Value="VPC:"$vpcId
 else
 	echo "VPC creation failed"
 	exit 1
@@ -58,6 +59,7 @@ subnetId1=$(aws ec2 create-subnet --vpc-id "$vpcId" --cidr-block "$subnet1Cidr" 
 if [ $? -eq 0 ]
 then
 	echo "Subnet 1 created "$subnetId1
+	aws ec2 create-tags --resources "$subnetId1" --tags Key=Name,Value="Subnet:"$subnetId1
 else
 	echo "Subnet 1 creation failed"
 	exit 1
@@ -68,6 +70,7 @@ subnetId2=$(aws ec2 create-subnet --vpc-id "$vpcId" --cidr-block "$subnet2Cidr" 
 if [ $? -eq 0 ]
 then
 	echo "Subnet 2 created "$subnetId2
+	aws ec2 create-tags --resources "$subnetId2" --tags Key=Name,Value="Subnet:"$subnetId2
 else
 	echo "Subnet 2 creation failed"
 	exit 1
@@ -78,6 +81,7 @@ subnetId3=$(aws ec2 create-subnet --vpc-id "$vpcId" --cidr-block "$subnet3Cidr" 
 if [ $? -eq 0 ]
 then
 	echo "Subnet 3 created "$subnetId3
+	aws ec2 create-tags --resources "$subnetId3" --tags Key=Name,Value="Subnet:"$subnetId3
 else
 	echo "Subnet 3 creation failed"
 	exit 1
@@ -92,6 +96,7 @@ gateway_Id=$(aws ec2 create-internet-gateway --query "InternetGateway.InternetGa
 if [ $? -eq 0 ]
 then
 	echo "Internet Gateway created successfully. ID : "$gateway_Id
+	aws ec2 create-tags --resources "$gateway_Id" --tags Key=Name,Value="IG:"$gateway_Id
 else
 	echo "Internet Gateway creation failed"
 	exit 1
@@ -114,6 +119,8 @@ routingtable_Id=$(aws ec2 create-route-table --vpc-id "$vpcId" --query "RouteTab
 if [ $? -eq 0 ]
 then
 	echo "Routing table created $routingtable_Id for VPC "$vpcId
+	aws ec2 create-tags --resources "$routingtable_Id" --tags Key=Name,Value="RT:"$routingtable_Id
+
 else
 	echo "Failed to create routing table"
 	exit 1

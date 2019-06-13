@@ -2,6 +2,13 @@
 
 vpcid=$1
 
+if [ -z "$1" ]
+then
+	echo "Please enter VPC"
+	exit 1
+fi
+
+
 #Fetching all subnet for VPC
 subnet_reponse=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="${vpcid}" --output json)
 subnet1=$(echo -e "$subnet_reponse" | jq '.Subnets[0].SubnetId' | tr -d '""')
