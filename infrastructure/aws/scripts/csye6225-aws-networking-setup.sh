@@ -12,12 +12,12 @@ then
 	echo "Please enter CIDR"
 	exit 1
 else
-	if [ -z "$2" ]	
+	if [ -z "$2" ]
 	then 
 		echo "Please enter Region"
 		exit 1
 	else
-		if [ -z "$3" ] && [ -z "$4" ] && [ -z "$4" ]	
+		if [ -z "$3" ] && [ -z "$4" ] && [ -z "$4" ]
 		then
 			echo "Please enter cidr for all subnets"
 			exit 1
