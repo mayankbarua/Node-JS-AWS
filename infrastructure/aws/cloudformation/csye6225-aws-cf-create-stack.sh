@@ -14,12 +14,19 @@ VPC_NAME=$STACK_NAME-vpc
 INTERNETGATEWAY=$STACK_NAME-internetgateway
 ROUTETABLE=$STACK_NAME-routetable
 
-aws cloudformation create-stack --stack-name $STACK_NAME --template-body file:///home/jayc/scripts/cloudform.json --parameters ParameterKey=VPCName,ParameterValue=$VPC_NAME ParameterKey=VPCCIDR,ParameterValue=$VPC_CIDR ParameterKey=Subnet01CIDR,ParameterValue=$CIDR_SUBNET01 ParameterKey=Subnet02CIDR,ParameterValue=$CIDR_SUBNET02 ParameterKey=Subnet03CIDR,ParameterValue=$CIDR_SUBNET03 ParameterKey=Region,ParameterValue=$REGION ParameterKey=Subnet01Name,ParameterValue=$SUBNET_01 ParameterKey=Subnet02Name,ParameterValue=$SUBNET_02 ParameterKey=Subnet03Name,ParameterValue=$SUBNET_03 ParameterKey=InternetGatewayName,ParameterValue=$INTERNETGATEWAY ParameterKey=RouteTableName,ParameterValue=$ROUTETABLE
+aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://aws-cloudformation-template.json --parameters ParameterKey=VPCName,ParameterValue=$VPC_NAME ParameterKey=VPCCIDR,ParameterValue=$VPC_CIDR ParameterKey=Subnet01CIDR,ParameterValue=$CIDR_SUBNET01 ParameterKey=Subnet02CIDR,ParameterValue=$CIDR_SUBNET02 ParameterKey=Subnet03CIDR,ParameterValue=$CIDR_SUBNET03 ParameterKey=Region,ParameterValue=$REGION ParameterKey=Subnet01Name,ParameterValue=$SUBNET_01 ParameterKey=Subnet02Name,ParameterValue=$SUBNET_02 ParameterKey=Subnet03Name,ParameterValue=$SUBNET_03 ParameterKey=InternetGatewayName,ParameterValue=$INTERNETGATEWAY ParameterKey=RouteTableName,ParameterValue=$ROUTETABLE
 
-aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
 if [ $? -eq 0 ]; then
-    echo "Stack created successfully"
+    aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+    if [ $? -eq 0 ]; then
+        echo "Stack created successfully"
+    else
+        echo "Stack creation unsuccessful"
+fi
 else
     echo "Stack creation unsuccessful"
 fi
+
+
+
 
