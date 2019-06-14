@@ -67,6 +67,7 @@ then
 	zone3=$(echo -e "$zone_response" | jq '.AvailabilityZones[2].ZoneName' | tr -d '"')
 else	
 	echo "Zone not available"
+	aws ec2  delete-vpc --vpc-id "$vpcId"
 	exit 1
 fi
 
