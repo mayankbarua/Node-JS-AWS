@@ -3,12 +3,19 @@
 
 STACK_NAME=$1
 
-aws cloudformation delete-stack --stack-name $STACK_NAME
-
-aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
-
-if [ $? -eq 0 ]; then
-    echo "Terminated Successfully"
+if [ -z "$1" ]
+then
+    echo "Enter Stack name to be deleted"
+    exit 1
 else
-    echo "Termination unsuccessful"
+    echo -e "Deletion started\n"
+    aws cloudformation delete-stack --stack-name $STACK_NAME
+
+    aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
+
+    if [ $? -eq 0 ]; then
+        echo "Terminated Successfully"
+    else
+        echo "Termination unsuccessful"
+    fi
 fi
