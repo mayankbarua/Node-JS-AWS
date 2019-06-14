@@ -10,7 +10,6 @@ const sqlStatement = new SQL();
 
 router.post('/', authorization.checkAccess, function (req, res, next) {
     let id = uuidv4();
-    console.log(req.body);
     let title = req.body.title;
     let author = req.body.author;
     let isbn = req.body.isbn;
@@ -99,10 +98,23 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
             if (result[0] == null)
                 res.status(204).json(result);
             else
-                res.status(200).json(result);
+                var result_modify = [];
+            result.forEach(function (eachBook) {
+                result_modify.push({
+                    id: eachBook.id,
+                    title: eachBook.title,
+                    author: eachBook.author,
+                    isbn: eachBook.isbn,
+                    quantity: eachBook.quantity,
+                    image: {
+                        id: eachBook.image_id,
+                        url: eachBook.image_url
+                    }
+                });
+            });
+            res.status(200).json(result_modify);
         }
     })
-
 })
 
 router.put('/', authorization.checkAccess, function (req, res, next) {
@@ -231,18 +243,24 @@ router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, 
                     message: 'No book found with given id'
                 })
             } else {
-                sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
-                    if (err) res.status(500).json({
-                        message: "SQL error",
-                        error: err
-                    });
-                    else {
-                        if (result[0] == null)
-                            res.status(204).json(result);
-                        else
-                            res.status(200).json(result[0]);
-                    }
-                })
+                if (result[0].image_id == imageid) {
+                    sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
+                        if (err) res.status(500).json({
+                            message: "SQL error",
+                            error: err
+                        });
+                        else {
+                            if (result[0] == null)
+                                res.status(204).json(result);
+                            else
+                                res.status(200).json(result[0]);
+                        }
+                    })
+                } else {
+                    res.status(400).json({
+                        message: 'Image id for given book id is not matching'
+                    })
+                }
             }
         });
     }
@@ -269,35 +287,42 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
                     message: 'No book found with given id'
                 })
             } else {
-                if (url != null) {
-                    sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
-                        if (err) res.status(500).json({
-                            message: "SQL error",
-                            error: err
-                        });
-                        else {
-                            if (result[0] == null)
-                                res.status(404).json({
-                                    message: 'No image found with given id'
-                                })
+                if (result[0].image_id == imageid) {
+                    if (url != null) {
+                        sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
+                            if (err) res.status(500).json({
+                                message: "SQL error",
+                                error: err
+                            });
                             else {
-                                sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
-                                    if (err) res.status(500).json({
-                                        message: "SQL error",
-                                        error: err
-                                    });
-                                    else {
-                                        res.status(204).json(result);
-                                    }
-                                })
+                                if (result[0] == null)
+                                    res.status(404).json({
+                                        message: 'No image found with given id'
+                                    })
+                                else {
+                                    sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
+                                        if (err) res.status(500).json({
+                                            message: "SQL error",
+                                            error: err
+                                        });
+                                        else {
+                                            res.status(204).json(result);
+                                        }
+                                    })
+                                }
                             }
-                        }
-                    })
+                        })
+
+                    } else {
+                        res.status(400).json({
+                            messgae: "Bad Request : Please enter all details"
+                        });
+                    }
 
                 } else {
                     res.status(400).json({
-                        messgae: "Bad Request : Please enter all details"
-                    });
+                        message: 'Image id for given book id is not matching'
+                    })
                 }
 
             }
@@ -310,8 +335,6 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
 router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (req, res, next) {
     let imageid = req.params.imageid;
     let bookid = req.params.bookid;
-
-
     if (bookid == null) {
         res.status(400).json({
             message: 'Missing Parameters. Bad Request'
@@ -323,30 +346,36 @@ router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (re
                     message: 'No book found with given id'
                 })
             } else {
-                sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
-                    if (err) res.status(500).json({
-                        message: "SQL error",
-                        error: err
-                    });
-                    else {
-                        if (result[0] == null)
-                            res.status(404).json({
-                                message: 'No image found with given id'
-                            })
+                if (result[0].image_id == imageid) {
+                    sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
+                        if (err) res.status(500).json({
+                            message: "SQL error",
+                            error: err
+                        });
                         else {
+                            if (result[0] == null)
+                                res.status(404).json({
+                                    message: 'No image found with given id'
+                                })
+                            else {
 
-                            sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
-                                if (err) res.status(500).json({
-                                    message: "SQL error",
-                                    error: err
-                                });
-                                else {
-                                    res.status(204).json(result);
-                                }
-                            })
+                                sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
+                                    if (err) res.status(500).json({
+                                        message: "SQL error",
+                                        error: err
+                                    });
+                                    else {
+                                        res.status(204).json(result);
+                                    }
+                                })
+                            }
                         }
-                    }
-                })
+                    })
+                } else {
+                    res.status(400).json({
+                        message: 'Image id for given book id is not matching'
+                    })
+                }
             }
         });
     }
