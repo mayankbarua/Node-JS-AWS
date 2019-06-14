@@ -8,6 +8,7 @@ then
 	exit 1
 fi
 
+echo "VPC and resources deletion started"
 
 #Fetching all subnet for VPC
 subnet_reponse=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="${vpcid}" --output json)

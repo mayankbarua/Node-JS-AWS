@@ -10,20 +10,39 @@ subnet3Cidr=$5
 if [ -z "$1" ]
 then 
 	echo "Please enter CIDR"
+	echo "Format should be in sequence : 'VPC-CIDR' 'AVAILABILITY_REGION' 'SUBNET1_CIDR' 'SUBNET2_CIDR' 'SUBNET3_CIDR'"
 	exit 1
 else
 	if [ -z "$2" ]
 	then 
 		echo "Please enter Region"
+		echo "Format should be in sequence : 'VPC-CIDR' 'AVAILABILITY_REGION' 'SUBNET1_CIDR' 'SUBNET2_CIDR' 'SUBNET3_CIDR'"
 		exit 1
 	else
-		if [ -z "$3" ] && [ -z "$4" ] && [ -z "$4" ]
+		if [ -z "$3" ]
 		then
-			echo "Please enter cidr for all subnets"
+			echo "Please enter cidr for subnet 1"
+			echo "Format should be in sequence : 'VPC-CIDR' 'AVAILABILITY_REGION' 'SUBNET1_CIDR' 'SUBNET2_CIDR' 'SUBNET3_CIDR'"
 			exit 1
+		else
+		    if [ -z "$4" ]
+		    then
+			    echo "Please enter cidr for subnet 2"
+			    echo "Format should be in sequence : 'VPC-CIDR' 'AVAILABILITY_REGION' 'SUBNET1_CIDR' 'SUBNET2_CIDR' 'SUBNET3_CIDR'"
+			    exit 1
+			else
+			   if [ -z "$5" ]
+		        then
+			        echo "Please enter cidr for subnet 3"
+			        echo "Format should be in sequence : 'VPC-CIDR' 'AVAILABILITY_REGION' 'SUBNET1_CIDR' 'SUBNET2_CIDR' 'SUBNET3_CIDR'"
+			        exit 1
+			    fi
+		    fi
 		fi	
 	fi	
 fi
+
+echo "VPC and Resources creation started"
 
 #create vpc with cidr block /16
 vpcId=$(aws ec2 create-vpc --cidr-block "$cidr" --query 'Vpc.VpcId' --output text)
@@ -62,6 +81,7 @@ then
 	aws ec2 create-tags --resources "$subnetId1" --tags Key=Name,Value="Subnet:"$subnetId1
 else
 	echo "Subnet 1 creation failed"
+	aws ec2  delete-vpc --vpc-id "$vpcId"
 	exit 1
 fi
 
@@ -73,6 +93,8 @@ then
 	aws ec2 create-tags --resources "$subnetId2" --tags Key=Name,Value="Subnet:"$subnetId2
 else
 	echo "Subnet 2 creation failed"
+	aws ec2 delete-subnet --subnet-id "$subnetId1"
+	aws ec2  delete-vpc --vpc-id "$vpcId"
 	exit 1
 fi
 
@@ -84,6 +106,9 @@ then
 	aws ec2 create-tags --resources "$subnetId3" --tags Key=Name,Value="Subnet:"$subnetId3
 else
 	echo "Subnet 3 creation failed"
+	aws ec2 delete-subnet --subnet-id "$subnetId2"
+	aws ec2 delete-subnet --subnet-id "$subnetId1"
+	aws ec2  delete-vpc --vpc-id "$vpcId"
 	exit 1
 fi
 
