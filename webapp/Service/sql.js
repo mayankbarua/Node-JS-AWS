@@ -10,7 +10,7 @@ class SQL {
     }
 
     getAllUserSQL() {
-        let sql = `SELECT * FROM user`;
+       let sql = `SELECT * FROM user`;
         return sql;
     }
 
@@ -25,7 +25,8 @@ class SQL {
     }
 
     getBookById(id){
-        let sql = `SELECT * FROM book where id='${id}'`;
+        let sql = `select b.id, b.title, b.author, b.isbn, b.quantity, i.id as image_id, i.url as image_url from book b left join image i on b.image = i.id  where b.id='${id}'`;
+        //let sql = `SELECT * FROM book where id='${id}'`;
         return sql;
     }
 
@@ -35,7 +36,8 @@ class SQL {
     }
 
     getAllBookSQL(){
-        let sql =  `SELECT * FROM book`;
+        let sql = `select b.id, b.title, b.author, b.isbn, b.quantity, i.id as image_id, i.url as image_url from book b left join image i on b.image = i.id`;
+        //let sql =  `SELECT * FROM book`;
         return sql;
     }
 
