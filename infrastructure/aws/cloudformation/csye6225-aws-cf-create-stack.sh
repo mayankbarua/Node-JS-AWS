@@ -19,7 +19,7 @@ then
 	echo "Please enter all parameters in order ( Stack Name, VPC CIDR block, CIDR block for 3 subnets, Region )"
 	exit 1
 else
-	aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://aws-cloudformation-template.json --parameters ParameterKey=VPCName,ParameterValue=$VPC_NAME ParameterKey=VPCCIDR,ParameterValue=$VPC_CIDR ParameterKey=Subnet01CIDR,ParameterValue=$CIDR_SUBNET01 ParameterKey=Subnet02CIDR,ParameterValue=$CIDR_SUBNET02 ParameterKey=Subnet03CIDR,ParameterValue=$CIDR_SUBNET03 ParameterKey=Region,ParameterValue=$REGION ParameterKey=Subnet01Name,ParameterValue=$SUBNET_01 ParameterKey=Subnet02Name,ParameterValue=$SUBNET_02 ParameterKey=Subnet03Name,ParameterValue=$SUBNET_03 ParameterKey=InternetGatewayName,ParameterValue=$INTERNETGATEWAY ParameterKey=RouteTableName,ParameterValue=$ROUTETABLE
+	aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://csye6225-cf-networking.json --parameters ParameterKey=VPCName,ParameterValue=$VPC_NAME ParameterKey=VPCCIDR,ParameterValue=$VPC_CIDR ParameterKey=Subnet01CIDR,ParameterValue=$CIDR_SUBNET01 ParameterKey=Subnet02CIDR,ParameterValue=$CIDR_SUBNET02 ParameterKey=Subnet03CIDR,ParameterValue=$CIDR_SUBNET03 ParameterKey=Region,ParameterValue=$REGION ParameterKey=Subnet01Name,ParameterValue=$SUBNET_01 ParameterKey=Subnet02Name,ParameterValue=$SUBNET_02 ParameterKey=Subnet03Name,ParameterValue=$SUBNET_03 ParameterKey=InternetGatewayName,ParameterValue=$INTERNETGATEWAY ParameterKey=RouteTableName,ParameterValue=$ROUTETABLE
     if [ $? -eq 0 ]; then
         aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
         if [ $? -eq 0 ]; then
