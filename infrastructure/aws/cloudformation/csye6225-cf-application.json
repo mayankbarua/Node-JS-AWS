@@ -1,0 +1,160 @@
+{
+  "Description": "AWS CloudFormation Application Template",
+  "Parameters": {
+    "NetworkStackName": {
+      "Type": "String"
+    },
+    "AMIid": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "EC2InstanceSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-VPC"}},
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 3000,
+            "ToPort": 3000,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "EC2InstanceSecurityGroupIngress1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "EC2InstanceSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 80,
+        "ToPort": 80,
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "EC2InstanceSecurityGroupIngress2": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "EC2InstanceSecurityGroup"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 443,
+        "ToPort": 443,
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "EC2InstanceSecurityGroupRDS": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow http to client host",
+        "VpcId": {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-VPC"}}
+      }
+    },
+    "EC2InstanceSecurityGroupIngressRDS": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "EC2InstanceSecurityGroupRDS"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": 3306,
+        "ToPort": 3306,
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "EC2InstanceSecurityGroup",
+            "GroupId"
+          ]
+        }
+      }
+    },
+    "EC2Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": {"Ref": "AMIid"},
+        "KeyName": "csye6225-centOS",
+        "SubnetId": {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-Subnet01"}},
+        "SecurityGroupIds": [
+          {
+            "Ref": "EC2InstanceSecurityGroup"
+          }
+        ],
+        "InstanceType": "t2.micro",
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeType": "gp2",
+              "DeleteOnTermination": "true",
+              "VolumeSize": "20"
+            }
+          }
+        ]
+      }
+    },
+    "DynamoDBTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ],
+        "TableName": "csye6225",
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    },
+    "RDSSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "RDS Subnet Group",
+        "DBSubnetGroupName": "SubnetGroupRDS",
+        "SubnetIds": [
+          {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-Subnet02"}},
+          {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-Subnet03"}}
+        ]
+      }
+    },
+
+    "RDS": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "AllocatedStorage": "5",
+        "DBInstanceClass": "db.t2.small",
+        "DBInstanceIdentifier": "csye6225-su19",
+        "DBName": "csye6225",
+        "Engine": "MySQL",
+        "MasterUserPassword": "csye6225password",
+        "MasterUsername": "csye6225master",
+        "MultiAZ": false,
+        "DBSubnetGroupName": {
+          "Ref": "RDSSubnetGroup"
+        },
+        "VPCSecurityGroups" : [{
+          "Ref": "EC2InstanceSecurityGroupRDS"
+        }]
+      }
+    }
+  },
+  "Outputs": {
+  },
+  "AWSTemplateFormatVersion": "2010-09-09"
+}
+
