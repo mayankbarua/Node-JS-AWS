@@ -2,11 +2,57 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const sql = require('../db.js');
-const SQL = require('../Service/sql.js')
-const authorization = require('../Service/authorization');
+const SQL = require('../service/sql.js');
+const authorization = require('../service/authorization');
 const uuidv4 = require('uuid/v4');
+const aws = require('aws-sdk');
+const multerS3 = require('multer-s3');
 
 const sqlStatement = new SQL();
+aws.config.update({
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+});
+let s3 = new aws.S3();
+const bucket = process.env.S3_BUCKET_ADDR;
+
+var upload
+
+if (process.env.NODE_ENV == 'production') {
+    upload = multer({
+        storage: multerS3({
+            s3: s3,
+            bucket: bucket,
+            acl: 'private',
+            contentType: multerS3.AUTO_CONTENT_TYPE,
+            key: (req, file, cb) => {
+                cb(null, file.originalname);
+            }
+        })
+    });
+} else {
+    let storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, './public/images');
+        },
+        filename: (req, file, cb) => {
+            console.log(file);
+            var filetype = '';
+            if (file.mimetype === 'image/gif') {
+                filetype = 'gif';
+            }
+            if (file.mimetype === 'image/png') {
+                filetype = 'png';
+            }
+            if (file.mimetype === 'image/jpeg') {
+                filetype = 'jpg';
+            }
+            cb(null, 'image-' + Date.now() + '.' + filetype);
+        }
+    });
+    upload = multer({storage: storage})
+}
+
 
 router.post('/', authorization.checkAccess, function (req, res, next) {
     let id = uuidv4();
@@ -14,6 +60,7 @@ router.post('/', authorization.checkAccess, function (req, res, next) {
     let author = req.body.author;
     let isbn = req.body.isbn;
     let quantity = req.body.quantity;
+
     if (title != null && author != null && isbn != null && quantity >= 1) {
         sql.query(sqlStatement.getAddBookSQL(id, title, author, isbn, quantity), function (err, result, fields) {
             if (err)
@@ -74,7 +121,7 @@ router.delete('/:id', authorization.checkAccess, function (req, res, next) {
         });
     } else {
         sql.query(sqlStatement.deleteBookById(id), function (err, result) {
-            if (result.affectedRows == 0) {
+            if (result.affectedRows === 0) {
                 res.status(404).json({
                     message: 'No book found with given id'
                 })
@@ -85,7 +132,6 @@ router.delete('/:id', authorization.checkAccess, function (req, res, next) {
             }
         })
     }
-
 });
 
 router.get('/', authorization.checkAccess, function (req, res, next) {
@@ -97,25 +143,26 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
         else {
             if (result[0] == null)
                 res.status(204).json(result);
-            else
+            else {
                 var result_modify = [];
-            result.forEach(function (eachBook) {
-                result_modify.push({
-                    id: eachBook.id,
-                    title: eachBook.title,
-                    author: eachBook.author,
-                    isbn: eachBook.isbn,
-                    quantity: eachBook.quantity,
-                    image: {
-                        id: eachBook.image_id,
-                        url: eachBook.image_url
-                    }
+                result.forEach(function (eachBook) {
+                    result_modify.push({
+                        id: eachBook.id,
+                        title: eachBook.title,
+                        author: eachBook.author,
+                        isbn: eachBook.isbn,
+                        quantity: eachBook.quantity,
+                        image: {
+                            id: eachBook.image_id,
+                            url: eachBook.image_url
+                        }
+                    });
                 });
-            });
-            res.status(200).json(result_modify);
+                res.status(200).json(result_modify);
+            }
         }
     })
-})
+});
 
 router.put('/', authorization.checkAccess, function (req, res, next) {
     let bookID = req.body.id;
@@ -130,7 +177,7 @@ router.put('/', authorization.checkAccess, function (req, res, next) {
                     message: "SQL error"
                 });
             } else {
-                if (result.changedRows != 0) {
+                if (result.changedRows !== 0) {
                     res.status(204).json({
                         message: "Updated Successfully",
                         data: result
@@ -148,29 +195,7 @@ router.put('/', authorization.checkAccess, function (req, res, next) {
             message: "Bad Request: Please enter all details"
         })
     }
-})
-
-var storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, './public/images');
-    },
-    filename: (req, file, cb) => {
-        console.log(file);
-        var filetype = '';
-        if (file.mimetype === 'image/gif') {
-            filetype = 'gif';
-        }
-        if (file.mimetype === 'image/png') {
-            filetype = 'png';
-        }
-        if (file.mimetype === 'image/jpeg') {
-            filetype = 'jpg';
-        }
-        cb(null, 'image-' + Date.now() + '.' + filetype);
-    }
 });
-
-var upload = multer({storage: storage});
 
 
 router.post('/:id/image', authorization.checkAccess, upload.single('file'), function (req, res, next) {
@@ -181,7 +206,7 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
             message: 'Missing Parameters. Bad Request'
         });
     }
-    let url = req.file.path;
+    let url = req.file.location;
 
     if (bookid == null) {
         res.status(400).json({
@@ -198,13 +223,13 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
                     sql.query(sqlStatement.getAddImageSQL(id, url), function (err, result, fields) {
                             if (err)
                                 res.status(500).json({
-                                    messgae: "SQL error"
+                                    message: "SQL error"
                                 });
                             else {
                                 sql.query(sqlStatement.getAddBookImageSQL(bookid, id), function (err, result, fields) {
                                     if (err)
                                         res.status(500).json({
-                                            messgae: "SQL error"
+                                            message: "SQL error"
                                         });
                                     else
                                         res.status(201).json({
@@ -218,16 +243,14 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
                     )
                 } else {
                     res.status(400).json({
-                        messgae: "Bad Request : Please enter all details"
+                        message: "Bad Request : Please enter all details"
                     });
                 }
 
             }
         });
     }
-
-
-})
+});
 
 router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, res, next) {
     let bookid = req.params.bookid;
@@ -264,7 +287,7 @@ router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, 
             }
         });
     }
-})
+});
 
 
 router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('file'), function (req, res, next) {
@@ -275,7 +298,7 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
             message: 'Missing Parameters. Bad Request'
         });
     }
-    let url = req.file.path;
+    let url = req.file.location;
     if (bookid == null) {
         res.status(400).json({
             message: 'Missing Parameters. Bad Request'
@@ -315,7 +338,7 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
 
                     } else {
                         res.status(400).json({
-                            messgae: "Bad Request : Please enter all details"
+                            message: "Bad Request : Please enter all details"
                         });
                     }
 
@@ -328,8 +351,7 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
             }
         });
     }
-
-})
+});
 
 
 router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (req, res, next) {
@@ -356,7 +378,7 @@ router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (re
                             if (result[0] == null)
                                 res.status(404).json({
                                     message: 'No image found with given id'
-                                })
+                                });
                             else {
 
                                 sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
@@ -379,8 +401,7 @@ router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (re
             }
         });
     }
-
-})
+});
 
 
 module.exports = router;
