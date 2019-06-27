@@ -84,17 +84,51 @@ router.get('/:id', authorization.checkAccess, function (req, res, next) {
                     message: 'No book found with given id'
                 })
             } else {
-                res.status(200).json({
-                    id: result[0].id,
-                    title: result[0].title,
-                    author: result[0].author,
-                    isbn: result[0].isbn,
-                    quantity: result[0].quantity,
-                    image: {
-                        id: result[0].image_id,
-                        url: result[0].image_url
+                if (result[0] == null)
+                    res.status(204).json(result);
+                else {
+                    let params = {
+                        Bucket: bucket,
+                        Expires: 120, //seconds
+                        Key: result[0].url
+                    };
+                    var result_modify = [];
+                    if (process.env.NODE_ENV == 'production') {
+                        result.forEach(function (eachBook) {
+                            s3.getSignedUrl('getObject', params, (err, data) => {
+                                console.log(data);
+                                result_modify.push({
+                                    id: eachBook.id,
+                                    title: eachBook.title,
+                                    author: eachBook.author,
+                                    isbn: eachBook.isbn,
+                                    quantity: eachBook.quantity,
+                                    image: {
+                                        id: eachBook.image_id,
+                                        url: eachBook.image_url
+                                    },
+                                    presignedURL: data
+                                });
+                                res.status(200).json(result_modify);
+                            });
+
+                        });
+                    } else {
+                        result_modify.push({
+                            id: eachBook.id,
+                            title: eachBook.title,
+                            author: eachBook.author,
+                            isbn: eachBook.isbn,
+                            quantity: eachBook.quantity,
+                            image: {
+                                id: eachBook.image_id,
+                                url: eachBook.image_url
+                            }
+                        });
+                        res.status(200).json(result_modify);
                     }
-                });
+
+                }
 
             }
         });
@@ -132,8 +166,33 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
             if (result[0] == null)
                 res.status(204).json(result);
             else {
+                let params = {
+                    Bucket: bucket,
+                    Expires: 120, //seconds
+                    Key: result[0].url
+                };
                 var result_modify = [];
-                result.forEach(function (eachBook) {
+                if (process.env.NODE_ENV == 'production') {
+                    result.forEach(function (eachBook) {
+                        s3.getSignedUrl('getObject', params, (err, data) => {
+                            console.log(data);
+                            result_modify.push({
+                                id: eachBook.id,
+                                title: eachBook.title,
+                                author: eachBook.author,
+                                isbn: eachBook.isbn,
+                                quantity: eachBook.quantity,
+                                image: {
+                                    id: eachBook.image_id,
+                                    url: eachBook.image_url
+                                },
+                                presignedURL: data
+                            });
+                            res.status(200).json(result_modify);
+                        });
+
+                    });
+                } else {
                     result_modify.push({
                         id: eachBook.id,
                         title: eachBook.title,
@@ -145,8 +204,9 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
                             url: eachBook.image_url
                         }
                     });
-                });
-                res.status(200).json(result_modify);
+                    res.status(200).json(result_modify);
+                }
+
             }
         }
     })
@@ -195,8 +255,6 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
         });
     }
     let url = req.file.originalname;
-
-
     if (bookid == null) {
         res.status(400).json({
             message: 'Missing Parameters. Bad Request'
@@ -220,11 +278,21 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
                                         res.status(500).json({
                                             message: "SQL error"
                                         });
-                                    else
-                                        res.status(201).json({
-                                            id: id,
-                                            url: url
-                                        });
+                                    else {
+                                        let params = {
+                                            Bucket: bucket,
+                                            Expires: 120, //seconds
+                                            Key: result[0].url
+                                        };
+                                        if (process.env.NODE_ENV == 'production') {
+                                            s3.getSignedUrl('getObject', params, (err, data) => {
+                                                console.log(data);
+                                                res.status(200).json({Result: result[0], PresignedUrl: data});
+                                            });
+                                        } else {
+                                            res.status(200).json({Result: result[0]});
+                                        }
+                                    }
                                 });
                             }
 
@@ -274,9 +342,9 @@ router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, 
                                 if (process.env.NODE_ENV == 'production') {
                                     s3.getSignedUrl('getObject', params, (err, data) => {
                                         console.log(data);
-                                        res.status(200).json({Result: result[0], PresignedUrl : data});
+                                        res.status(200).json({Result: result[0], PresignedUrl: data});
                                     });
-                                } else{
+                                } else {
                                     res.status(200).json({Result: result[0]});
                                 }
 
