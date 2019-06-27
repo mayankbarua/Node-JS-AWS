@@ -2,21 +2,21 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const sql = require('../db.js');
-const SQL = require('../Service/sql.js');
-const authorization = require('../Service/authorization');
+const SQL = require('../service/sql.js');
+const authorization = require('../service/authorization');
 const uuidv4 = require('uuid/v4');
 const aws = require('aws-sdk');
 const multerS3 = require('multer-s3');
 
-const sqlStatement = new SQL();
-aws.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-});
-let s3 = new aws.S3();
-const bucket = process.env.S3_BUCKET_ADDR;
 
-var upload
+const sqlStatement = new SQL();
+
+let s3 = new aws.S3();
+
+aws.config.update({region: 'us-east-1'});
+
+const bucket = process.env.S3_BUCKET_ADDR;
+let upload;
 
 if (process.env.NODE_ENV == 'production') {
     upload = multer({
@@ -36,23 +36,11 @@ if (process.env.NODE_ENV == 'production') {
             cb(null, './public/images');
         },
         filename: (req, file, cb) => {
-            console.log(file);
-            var filetype = '';
-            if (file.mimetype === 'image/gif') {
-                filetype = 'gif';
-            }
-            if (file.mimetype === 'image/png') {
-                filetype = 'png';
-            }
-            if (file.mimetype === 'image/jpeg') {
-                filetype = 'jpg';
-            }
-            cb(null, 'image-' + Date.now() + '.' + filetype);
+            cb(null, file.originalname);
         }
     });
     upload = multer({storage: storage})
 }
-
 
 router.post('/', authorization.checkAccess, function (req, res, next) {
     let id = uuidv4();
@@ -206,7 +194,8 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
             message: 'Missing Parameters. Bad Request'
         });
     }
-    let url = req.file.location;
+    let url = req.file.originalname;
+
 
     if (bookid == null) {
         res.status(400).json({
@@ -252,6 +241,7 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
     }
 });
 
+
 router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, res, next) {
     let bookid = req.params.bookid;
     let imageid = req.params.imageid;
@@ -275,8 +265,22 @@ router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, 
                         else {
                             if (result[0] == null)
                                 res.status(204).json(result);
-                            else
-                                res.status(200).json(result[0]);
+                            else {
+                                let params = {
+                                    Bucket: bucket,
+                                    Expires: 120, //seconds
+                                    Key: result[0].url
+                                };
+                                if (process.env.NODE_ENV == 'production') {
+                                    s3.getSignedUrl('getObject', params, (err, data) => {
+                                        console.log(data);
+                                        res.status(200).json({Result: result[0], PresignedUrl : data});
+                                    });
+                                } else{
+                                    res.status(200).json({Result: result[0]});
+                                }
+
+                            }
                         }
                     })
                 } else {
