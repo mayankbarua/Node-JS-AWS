@@ -9,6 +9,15 @@
     }
   },
   "Resources": {
+    "IAMRole": {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "InstanceProfileName" : "S3RDS",
+        "Roles" : ["csye6225-s3"]
+      }
+    },
+
+
     "EC2InstanceSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
@@ -84,6 +93,7 @@
         "ImageId": {"Ref": "AMIid"},
         "KeyName": "csye6225-centOS",
         "SubnetId": {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-Subnet01"}},
+        "IamInstanceProfile" : {"Ref": "IAMRole"},
         "SecurityGroupIds": [
           {
             "Ref": "EC2InstanceSecurityGroup"
