@@ -186,6 +186,7 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
                             });
                         })
                     }
+
                     loop()
                         .then((array) => {
                             res.status(200).json(array);
@@ -193,8 +194,7 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
                         .catch((err) => {
                             res.status(500).json(err)
                         });
-                }
-                else{
+                } else {
                     res.status(200).json(result);
                 }
 
@@ -240,65 +240,71 @@ router.put('/', authorization.checkAccess, function (req, res, next) {
 router.post('/:id/image', authorization.checkAccess, upload.single('file'), function (req, res, next) {
     let id = uuidv4();
     let bookid = req.params.id;
-    if (!req.file) {
-        res.status(400).json({
-            message: 'Missing Parameters. Bad Request'
-        });
-    }
-    let url = req.file.originalname;
-    if (bookid == null) {
-        res.status(400).json({
-            message: 'Missing Parameters. Bad Request'
-        });
-    } else {
-        sql.query(sqlStatement.getBookById(bookid), function (err, result) {
-            if (result[0] == null) {
-                res.status(404).json({
-                    message: 'No book found with given id'
-                })
-            } else {
-                if (url != null) {
-                    sql.query(sqlStatement.getAddImageSQL(id, url), function (err, result, fields) {
-                            if (err)
-                                res.status(500).json({
-                                    message: "SQL error"
-                                });
-                            else {
-                                sql.query(sqlStatement.getAddBookImageSQL(bookid, id), function (err, result, fields) {
-                                    if (err)
-                                        res.status(500).json({
-                                            message: "SQL error"
-                                        });
-                                    else {
-                                        if (process.env.NODE_ENV == 'production') {
-                                            let params = {
-                                                Bucket: bucket,
-                                                Expires: 120, //seconds
-                                                Key: url
-                                            };
-                                            s3.getSignedUrl('getObject', params, (err, data) => {
-                                                console.log(data);
-                                                res.status(201).json({id: id, PresignedUrl: data});
-                                            });
-                                        } else {
-                                            res.status(201).json({
-                                                id: id,
-                                                url: url
-                                            });
-                                        }
-                                    }
-                                });
-                            }
-
-                        }
-                    )
+    if (req.file.contentType == 'image/jpeg' || req.file.contentType == 'image/png' || req.file.contentType == 'image/jpg' || req.file.mimetype == 'image/jpeg' || req.file.mimetype == 'image/jpg' || req.file.mimetype == 'image/png') {
+        if (!req.file) {
+            res.status(400).json({
+                message: 'Missing Parameters. Bad Request'
+            });
+        }
+        let url = req.file.originalname;
+        if (bookid == null) {
+            res.status(400).json({
+                message: 'Missing Parameters. Bad Request'
+            });
+        } else {
+            sql.query(sqlStatement.getBookById(bookid), function (err, result) {
+                if (result[0] == null) {
+                    res.status(404).json({
+                        message: 'No book found with given id'
+                    })
                 } else {
-                    res.status(400).json({
-                        message: "Bad Request : Please enter all details"
-                    });
-                }
+                    if (url != null) {
+                        sql.query(sqlStatement.getAddImageSQL(id, url), function (err, result, fields) {
+                                if (err)
+                                    res.status(500).json({
+                                        message: "SQL error"
+                                    });
+                                else {
+                                    sql.query(sqlStatement.getAddBookImageSQL(bookid, id), function (err, result, fields) {
+                                        if (err)
+                                            res.status(500).json({
+                                                message: "SQL error"
+                                            });
+                                        else {
+                                            if (process.env.NODE_ENV == 'production') {
+                                                let params = {
+                                                    Bucket: bucket,
+                                                    Expires: 120, //seconds
+                                                    Key: url
+                                                };
+                                                s3.getSignedUrl('getObject', params, (err, data) => {
+                                                    console.log(data);
+                                                    res.status(201).json({id: id, PresignedUrl: data});
+                                                });
+                                            } else {
+                                                res.status(201).json({
+                                                    id: id,
+                                                    url: url
+                                                });
+                                            }
+                                        }
+                                    });
+                                }
 
-            }
+                            }
+                        )
+                    } else {
+                        res.status(400).json({
+                            message: "Bad Request : Please enter all details"
+                        });
+                    }
+
+                }
+            });
+        }
+    } else {
+        res.status(400).json({
+            message: "Bad Request : Image type have to be PNG, JPEG or JPG"
         });
     }
 });
@@ -359,86 +365,92 @@ router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, 
 router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('file'), function (req, res, next) {
     let bookid = req.params.bookid;
     let imageid = req.params.imageid;
-    if (!req.file) {
-        res.status(400).json({
-            message: 'Missing Parameters. Bad Request'
-        });
-    }
-    let url = req.file.location;
-    if (bookid == null) {
-        res.status(400).json({
-            message: 'Missing Parameters. Bad Request'
-        });
-    } else {
-        sql.query(sqlStatement.getBookById(bookid), function (err, result) {
-            if (result[0] == null) {
-                res.status(404).json({
-                    message: 'No book found with given id'
-                })
-            } else {
-                if (result[0].image_id == imageid) {
-                    if (url != null) {
-                        sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
-                            if (err) res.status(500).json({
-                                message: "SQL error",
-                                error: err
-                            });
-                            else {
-                                if (result[0] == null)
-                                    res.status(404).json({
-                                        message: 'No image found with given id'
-                                    })
+    if (req.file.contentType == 'image/jpeg' || req.file.contentType == 'image/png' || req.file.contentType == 'image/jpg' || req.file.mimetype == 'image/jpeg' || req.file.mimetype == 'image/jpg' || req.file.mimetype == 'image/png') {
+        if (!req.file) {
+            res.status(400).json({
+                message: 'Missing Parameters. Bad Request'
+            });
+        }
+        let url = req.file.originalname;
+        if (bookid == null) {
+            res.status(400).json({
+                message: 'Missing Parameters. Bad Request'
+            });
+        } else {
+            sql.query(sqlStatement.getBookById(bookid), function (err, result) {
+                if (result[0] == null) {
+                    res.status(404).json({
+                        message: 'No book found with given id'
+                    })
+                } else {
+                    if (result[0].image_id == imageid) {
+                        if (url != null) {
+                            sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
+                                if (err) res.status(500).json({
+                                    message: "SQL error",
+                                    error: err
+                                });
                                 else {
-                                    if (process.env.NODE_ENV == 'production') {
-                                        let params = {
-                                            Bucket: bucket,
-                                            Key: result[0].url
-                                        };
-                                        s3.putObject(params, function (err, data) {
-                                            if (err) res.status(500).json({
-                                                message: "S3 error",
-                                                error: err
-                                            });
-                                            else {
-                                                sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
-                                                    if (err) res.status(500).json({
-                                                        message: "S3 updated, but error in Image table",
-                                                        error: err
-                                                    });
-                                                    else {
-                                                        res.status(204).json(result);
-                                                    }
-                                                })
-                                            }
-                                        });
-                                    } else {
-                                        sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
-                                            if (err) res.status(500).json({
-                                                message: "SQL error",
-                                                error: err
-                                            });
-                                            else {
-                                                res.status(204).json(result);
-                                            }
+                                    if (result[0] == null)
+                                        res.status(404).json({
+                                            message: 'No image found with given id'
                                         })
+                                    else {
+                                        if (process.env.NODE_ENV == 'production') {
+                                            let params = {
+                                                Bucket: bucket,
+                                                Key: result[0].url
+                                            };
+                                            s3.putObject(params, function (err, data) {
+                                                if (err) res.status(500).json({
+                                                    message: "S3 error",
+                                                    error: err
+                                                });
+                                                else {
+                                                    sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
+                                                        if (err) res.status(500).json({
+                                                            message: "S3 updated, but error in Image table",
+                                                            error: err
+                                                        });
+                                                        else {
+                                                            res.status(204).json(result);
+                                                        }
+                                                    })
+                                                }
+                                            });
+                                        } else {
+                                            sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
+                                                if (err) res.status(500).json({
+                                                    message: "SQL error",
+                                                    error: err
+                                                });
+                                                else {
+                                                    res.status(204).json(result);
+                                                }
+                                            })
+                                        }
                                     }
                                 }
-                            }
-                        })
+                            })
+
+                        } else {
+                            res.status(400).json({
+                                message: "Bad Request : Please enter all details"
+                            });
+                        }
 
                     } else {
                         res.status(400).json({
-                            message: "Bad Request : Please enter all details"
-                        });
+                            message: 'Image id for given book id is not matching'
+                        })
                     }
 
-                } else {
-                    res.status(400).json({
-                        message: 'Image id for given book id is not matching'
-                    })
                 }
-
-            }
+            });
+        }
+    } else {
+        res.status(400).json({
+            message: "Bad Request : Image type have to be PNG, JPEG or JPG"
         });
     }
 });
