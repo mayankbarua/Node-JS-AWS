@@ -157,46 +157,47 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
             if (result[0] == null)
                 res.status(204).json(result);
             else {
-                var result_modify = [];
                 if (process.env.NODE_ENV == 'production') {
-                    result.forEach(function (eachBook) {
-                        let params = {
-                            Bucket: bucket,
-                            Expires: 120, //seconds
-                            Key: eachBook.image_url
-                        };
-                        s3.getSignedUrl('getObject', params, (err, data) => {
-                            result_modify.push({
-                                id: eachBook.id,
-                                title: eachBook.title,
-                                author: eachBook.author,
-                                isbn: eachBook.isbn,
-                                quantity: eachBook.quantity,
-                                image: {
-                                    id: eachBook.image_id,
-                                    url: eachBook.image_url
-                                },
-                                presignedURL: data
-                            })
+                    function loop() {
+                        return new Promise((resolve, reject) => {
+                            result.forEach((eachBook, index, array) => {
+                                let params = {Bucket: bucket, Expires: 120, Key: eachBook.image_url};
+                                if (params.Key != null) {
+                                    s3.getSignedUrl('getObject', params, (err, data) => {
+                                        if (err)
+                                            reject(err);
+                                        else {
+                                            array[index] = {
+                                                id: eachBook.id,
+                                                title: eachBook.title,
+                                                author: eachBook.author,
+                                                isbn: eachBook.isbn,
+                                                quantity: eachBook.quantity,
+                                                image: {
+                                                    id: eachBook.image_id,
+                                                    url: eachBook.image_url
+                                                },
+                                                presignedUrl: data
+                                            }
+                                            resolve(array);
+                                        }
+                                    })
+                                }
+                            });
                         })
-                    });
-                    res.status(200).json(result_modify);
-                } else {
-                    result.forEach(function (eachBook) {
-                        result_modify.push({
-                            id: eachBook.id,
-                            title: eachBook.title,
-                            author: eachBook.author,
-                            isbn: eachBook.isbn,
-                            quantity: eachBook.quantity,
-                            image: {
-                                id: eachBook.image_id,
-                                url: eachBook.image_url
-                            }
+                    }
+                    loop()
+                        .then((array) => {
+                            res.status(200).json(array);
+                        })
+                        .catch((err) => {
+                            res.status(500).json(err)
                         });
-                    });
-                    res.status(200).json(result_modify);
                 }
+                else{
+                    res.status(200).json(result);
+                }
+
             }
         }
     })
