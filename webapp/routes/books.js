@@ -28,7 +28,13 @@ if (process.env.NODE_ENV == 'production') {
             key: (req, file, cb) => {
                 cb(null, file.originalname);
             }
-        })
+        }),
+        fileFilter: function (req, file, cb) {
+            if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg')
+                return cb(null, true);
+            else
+                return cb(new Error('Unsupported File Format'), false);
+        }
     });
 } else {
     let storage = multer.diskStorage({
@@ -39,7 +45,14 @@ if (process.env.NODE_ENV == 'production') {
             cb(null, file.originalname);
         }
     });
-    upload = multer({storage: storage})
+    upload = multer({
+        storage: storage, fileFilter: function (req, file, cb) {
+            if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg')
+                return cb(null, true);
+            else
+                return cb(new Error('Unsupported File Format'), false);
+        }
+    })
 }
 
 router.post('/', authorization.checkAccess, function (req, res, next) {
