@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const sql = require('../db.js');
-const SQL = require('../Service/sql.js')
-const Validator = require('../Service/validator');
-const authorization = require('../Service/authorization');
+const SQL = require('../service/sql.js')
+const Validator = require('../service/validator');
+const authorization = require('../service/authorization');
 
 const sqlStatement = new SQL();
 const validator = new Validator();
