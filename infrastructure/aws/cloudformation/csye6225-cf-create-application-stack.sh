@@ -10,7 +10,7 @@ then
 	echo "Please enter all parameters in order ( Stack Name, AMI id, Networking Stack Name )"
 	exit 1
 else
-	aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://csye6225-cf-application.json --parameters ParameterKey=AMIid,ParameterValue=$AMI_ID ParameterKey=NetworkStackName,ParameterValue=$NETWORKING_STACK_NAME
+	aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://csye6225-cf-application.json --parameters ParameterKey=AMIid,ParameterValue=$AMI_ID ParameterKey=NetworkStackName,ParameterValue=$NETWORKING_STACK_NAME --capabilities CAPABILITY_NAMED_IAM
     if [ $? -eq 0 ]; then
         aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
         if [ $? -eq 0 ]; then
