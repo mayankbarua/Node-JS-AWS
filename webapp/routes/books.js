@@ -84,36 +84,29 @@ router.get('/:id', authorization.checkAccess, function (req, res, next) {
                     message: 'No book found with given id'
                 })
             } else {
-                if (result[0] == null)
-                    res.status(204).json(result);
-                else {
-                    let params = {
-                        Bucket: bucket,
-                        Expires: 120, //seconds
-                        Key: result[0].url
-                    };
-                    var result_modify = [];
-                    if (process.env.NODE_ENV == 'production') {
-                        result.forEach(function (eachBook) {
-                            s3.getSignedUrl('getObject', params, (err, data) => {
-                                console.log(data);
-                                result_modify.push({
-                                    id: eachBook.id,
-                                    title: eachBook.title,
-                                    author: eachBook.author,
-                                    isbn: eachBook.isbn,
-                                    quantity: eachBook.quantity,
-                                    image: {
-                                        id: eachBook.image_id,
-                                        url: eachBook.image_url
-                                    },
-                                    presignedURL: data
-                                });
-                                res.status(200).json(result_modify);
-                            });
-
+                let params = {
+                    Bucket: bucket,
+                    Expires: 120, //seconds
+                    Key: result[0].image_url
+                };
+                var result_modify = [];
+                if (process.env.NODE_ENV == 'production') {
+                    s3.getSignedUrl('getObject', params, (err, data) => {
+                        res.status(200).json({
+                            id: result[0].id,
+                            title: result[0].title,
+                            author: result[0].author,
+                            isbn: result[0].isbn,
+                            quantity: result[0].quantity,
+                            image: {
+                                id: result[0].image_id,
+                                url: result[0].image_url
+                            },
+                            presignedURL: data
                         });
-                    } else {
+                    });
+                } else {
+                    result.forEach(function (eachBook) {
                         result_modify.push({
                             id: eachBook.id,
                             title: eachBook.title,
@@ -125,11 +118,9 @@ router.get('/:id', authorization.checkAccess, function (req, res, next) {
                                 url: eachBook.image_url
                             }
                         });
-                        res.status(200).json(result_modify);
-                    }
-
+                    });
+                    res.status(200).json(result_modify);
                 }
-
             }
         });
     }
@@ -166,16 +157,15 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
             if (result[0] == null)
                 res.status(204).json(result);
             else {
-                let params = {
-                    Bucket: bucket,
-                    Expires: 120, //seconds
-                    Key: result[0].url
-                };
                 var result_modify = [];
                 if (process.env.NODE_ENV == 'production') {
                     result.forEach(function (eachBook) {
+                        let params = {
+                            Bucket: bucket,
+                            Expires: 120, //seconds
+                            Key: eachBook.image_url
+                        };
                         s3.getSignedUrl('getObject', params, (err, data) => {
-                            console.log(data);
                             result_modify.push({
                                 id: eachBook.id,
                                 title: eachBook.title,
@@ -187,26 +177,26 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
                                     url: eachBook.image_url
                                 },
                                 presignedURL: data
-                            });
-                            res.status(200).json(result_modify);
-                        });
-
+                            })
+                        })
                     });
+                    res.status(200).json(result_modify);
                 } else {
-                    result_modify.push({
-                        id: eachBook.id,
-                        title: eachBook.title,
-                        author: eachBook.author,
-                        isbn: eachBook.isbn,
-                        quantity: eachBook.quantity,
-                        image: {
-                            id: eachBook.image_id,
-                            url: eachBook.image_url
-                        }
+                    result.forEach(function (eachBook) {
+                        result_modify.push({
+                            id: eachBook.id,
+                            title: eachBook.title,
+                            author: eachBook.author,
+                            isbn: eachBook.isbn,
+                            quantity: eachBook.quantity,
+                            image: {
+                                id: eachBook.image_id,
+                                url: eachBook.image_url
+                            }
+                        });
                     });
                     res.status(200).json(result_modify);
                 }
-
             }
         }
     })
@@ -279,18 +269,21 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
                                             message: "SQL error"
                                         });
                                     else {
-                                        let params = {
-                                            Bucket: bucket,
-                                            Expires: 120, //seconds
-                                            Key: result[0].url
-                                        };
                                         if (process.env.NODE_ENV == 'production') {
+                                            let params = {
+                                                Bucket: bucket,
+                                                Expires: 120, //seconds
+                                                Key: url
+                                            };
                                             s3.getSignedUrl('getObject', params, (err, data) => {
                                                 console.log(data);
-                                                res.status(200).json({Result: result[0], PresignedUrl: data});
+                                                res.status(201).json({id: id, PresignedUrl: data});
                                             });
                                         } else {
-                                            res.status(200).json({Result: result[0]});
+                                            res.status(201).json({
+                                                id: id,
+                                                url: url
+                                            });
                                         }
                                     }
                                 });
@@ -395,15 +388,39 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
                                         message: 'No image found with given id'
                                     })
                                 else {
-                                    sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
-                                        if (err) res.status(500).json({
-                                            message: "SQL error",
-                                            error: err
+                                    if (process.env.NODE_ENV == 'production') {
+                                        let params = {
+                                            Bucket: bucket,
+                                            Key: result[0].url
+                                        };
+                                        s3.putObject(params, function (err, data) {
+                                            if (err) res.status(500).json({
+                                                message: "S3 error",
+                                                error: err
+                                            });
+                                            else {
+                                                sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
+                                                    if (err) res.status(500).json({
+                                                        message: "S3 updated, but error in Image table",
+                                                        error: err
+                                                    });
+                                                    else {
+                                                        res.status(204).json(result);
+                                                    }
+                                                })
+                                            }
                                         });
-                                        else {
-                                            res.status(204).json(result);
-                                        }
-                                    })
+                                    } else {
+                                        sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
+                                            if (err) res.status(500).json({
+                                                message: "SQL error",
+                                                error: err
+                                            });
+                                            else {
+                                                res.status(204).json(result);
+                                            }
+                                        })
+                                    }
                                 }
                             }
                         })
@@ -452,16 +469,39 @@ router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (re
                                     message: 'No image found with given id'
                                 });
                             else {
-
-                                sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
-                                    if (err) res.status(500).json({
-                                        message: "SQL error",
-                                        error: err
+                                if (process.env.NODE_ENV == 'production') {
+                                    let params = {
+                                        Bucket: bucket,
+                                        Key: result[0].url
+                                    };
+                                    s3.deleteObject(params, function (err, data) {
+                                        if (err) res.status(500).json({
+                                            message: "S3 error",
+                                            error: err
+                                        });
+                                        else {
+                                            sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
+                                                if (err) res.status(500).json({
+                                                    message: "Delete form S3, SQL error in Image table",
+                                                    error: err
+                                                });
+                                                else {
+                                                    res.status(204).json(result);
+                                                }
+                                            })
+                                        }
                                     });
-                                    else {
-                                        res.status(204).json(result);
-                                    }
-                                })
+                                } else {
+                                    sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
+                                        if (err) res.status(500).json({
+                                            message: "SQL error",
+                                            error: err
+                                        });
+                                        else {
+                                            res.status(204).json(result);
+                                        }
+                                    })
+                                }
                             }
                         }
                     })

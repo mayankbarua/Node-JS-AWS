@@ -36,7 +36,7 @@ connection.connect(function (err) {
             else
                 console.log('Image table created');
         });
-        connection.query('create table if not exists book(id varchar(200), title varchar(200), author varchar(200), isbn varchar(200), quantity int(11), image varchar(200), foreign key(image) REFERENCES image(id))', (error, data) => {
+        connection.query('create table if not exists book(id varchar(200), title varchar(200), author varchar(200), isbn varchar(200), quantity int(11), image varchar(200), foreign key(image) REFERENCES image(id) on delete set null)', (error, data) => {
             if (error)
                 throw error;
             else
