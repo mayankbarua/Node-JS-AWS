@@ -10,8 +10,7 @@ let checkAccess = (req, res, next) =>{
         res.status(401).json({ "message": "Please login"});
     }else if(auth) {
         let tmp = auth.split(' ');
-        let buf = new Buffer(tmp[1], 'base64');
-        let plain_auth = buf.toString();
+        let plain_auth = Buffer.from(tmp[1], 'base64').toString();
         let creds = plain_auth.split(':');
         let username = creds[0];
         let password = creds[1];
