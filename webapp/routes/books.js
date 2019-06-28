@@ -361,6 +361,7 @@ router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, 
 });
 
 
+
 router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('file'), function (req, res, next) {
     let bookid = req.params.bookid;
     let imageid = req.params.imageid;
@@ -394,6 +395,31 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
                                         message: 'No image found with given id'
                                     })
                                 else {
+                                    if (process.env.NODE_ENV == 'production') {
+                                        let params = {
+                                            Bucket: bucket,
+                                            Key: result[0].url
+                                        };
+                                        s3.putObject(params, function(err, data) {
+                                            if (err) res.status(500).json({
+                                                message: "S3 error",
+                                                error: err
+                                            });
+                                            else {
+                                                sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
+                                                    if (err) res.status(500).json({
+                                                        message: "S3 updated, but error in Image table",
+                                                        error: err
+                                                    });
+                                                    else {
+                                                        res.status(204).json(result);
+                                                    }
+                                                })
+                                            }
+                                        });
+                                    }
+                                    else
+                                    {
                                     sql.query(sqlStatement.getUpdateImage(imageid, url), function (err, result, fields) {
                                         if (err) res.status(500).json({
                                             message: "SQL error",
@@ -403,7 +429,7 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
                                             res.status(204).json(result);
                                         }
                                     })
-                                }
+                                }}
                             }
                         })
 
@@ -451,7 +477,30 @@ router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (re
                                     message: 'No image found with given id'
                                 });
                             else {
-
+                                if (process.env.NODE_ENV == 'production') {
+                                    let params = {
+                                        Bucket: bucket,
+                                        Key: result[0].url
+                                    };
+                                    s3.deleteObject(params, function(err, data) {
+                                        if (err) res.status(500).json({
+                                            message: "S3 error",
+                                            error: err
+                                        });
+                                        else {
+                                            sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
+                                                if (err) res.status(500).json({
+                                                    message: "Delete form S3, SQL error in Image table",
+                                                    error: err
+                                                });
+                                                else {
+                                                    res.status(204).json(result);
+                                                }
+                                            })
+                                        }
+                                    });
+                                }
+                                else {
                                 sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
                                     if (err) res.status(500).json({
                                         message: "SQL error",
@@ -461,6 +510,7 @@ router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (re
                                         res.status(204).json(result);
                                     }
                                 })
+                                }
                             }
                         }
                     })
