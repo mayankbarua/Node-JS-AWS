@@ -195,7 +195,21 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
                                             resolve(array);
                                         }
                                     })
+                                } else{
+                                    array[index] = {
+                                        id: eachBook.id,
+                                        title: eachBook.title,
+                                        author:eachBook.author,
+                                        isbn: eachBook.isbn,
+                                        quantity: eachBook.quantity,
+                                        image: {
+                                            id: eachBook.image_id,
+                                            url: eachBook.image_url
+                                        }
+                                    }
+                                    resolve(array);
                                 }
+
                             });
                         })
                     }
