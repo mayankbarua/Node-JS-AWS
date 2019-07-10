@@ -1,27 +1,37 @@
 version: 2
 jobs:
   build:
+    filters:
+      branches:
+        only:
+          - master
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/python:3.6-jessie
     steps:
       - checkout
+
+
       - run:
-          name: Build Artifact
+          name: install dependencies
           command: |
-            cd webapp
-            ./gradlew war
-            cd build/libs
-            ls -al
-            cd ../../..
+            sudo apt-get update && sudo apt-get install wget zip unzip
+            python3 -m venv venv
+            . venv/bin/activate
+
+      - run:
+          name: install awscli
+          command: sudo pip install awscli
+
       - run:
           name: Zip Artifact
           command: |
             echo "Hello the current build number is ${CIRCLE_BUILD_NUM}"
+            aws configure set default.region us-east-1
             pwd
             ls -al
             mkdir -p codedeploy_artifact
             cp infrastructure/aws/codedeploy/*.sh .
-            zip -r csye6225-web-app-${CIRCLE_BUILD_NUM}.zip webapp/build/libs/ROOT.war *.sh *.yml
+            zip -r csye6225-web-app-${CIRCLE_BUILD_NUM}.zip webapp *.sh *.yml
             ls -al
             mv csye6225-web-app-${CIRCLE_BUILD_NUM}.zip codedeploy_artifact/
             ls -al
@@ -32,11 +42,14 @@ jobs:
             cd ..
             pwd
             ls -al
+
       - run:
           name: Upload Artifact to S3
           command: |
-            echo "Hello"
+            aws s3 cp codedeploy_artifact/csye6225-web-app-${CIRCLE_BUILD_NUM}.zip ${S3_BUCKET_ADDR}/deployments/csye6225-web-app-${CIRCLE_BUILD_NUM}.zip
+
       - run:
           name: Make CodeDeploy API call
           command: |
-            echo "Hello CodeDeploy" 
+            aws deploy register-application-revision --application-name csye6225-webapp --s3-location bucket=${S3_BUCKET_ADDR},bundleType=zip,key=deployments/csye6225-web-app-${CIRCLE_BUILD_NUM}.zip
+            aws deploy create-deployment --application-name csye6225-webapp --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name csye6225-webapp-deployment --s3-location bucket=${S3_BUCKET_ADDR},bundleType=zip,key=deployments/csye6225-web-app-${CIRCLE_BUILD_NUM}.zip
