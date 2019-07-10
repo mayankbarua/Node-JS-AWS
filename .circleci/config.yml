@@ -1,8 +1,7 @@
 version: 2
 jobs:
   build:
-    filters:
-      branches:
+    branches:
         only:
           - master
     docker:
