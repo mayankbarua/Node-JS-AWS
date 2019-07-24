@@ -8,6 +8,7 @@ const uuidv4 = require('uuid/v4');
 const aws = require('aws-sdk');
 const multerS3 = require('multer-s3');
 const logger = require('../config/winston')
+const SDC = require('statsd-client'), sdc = new SDC();
 
 const sqlStatement = new SQL();
 
@@ -57,6 +58,7 @@ if (process.env.NODE_ENV == 'production') {
 
 router.post('/', authorization.checkAccess, function (req, res, next) {
     logger.info("Book Register Call");
+    sdc.counter('Post Book')
     let id = uuidv4();
     let title = req.body.title;
     let author = req.body.author;
@@ -88,6 +90,7 @@ router.post('/', authorization.checkAccess, function (req, res, next) {
 
 router.get('/:id', authorization.checkAccess, function (req, res, next) {
     logger.info("Book GET by ID Call");
+    sdc.counter('Get book by id')
     let id = req.params.id;
     if (id == null) {
         res.status(400).json({
@@ -144,6 +147,7 @@ router.get('/:id', authorization.checkAccess, function (req, res, next) {
 
 router.delete('/:id', authorization.checkAccess, function (req, res, next) {
     logger.info("Book Delete Call");
+    sdc.counter('Delete book by id')
     let id = req.params.id;
     if (id == null) {
         res.status(400).json({
@@ -166,6 +170,7 @@ router.delete('/:id', authorization.checkAccess, function (req, res, next) {
 
 router.get('/', authorization.checkAccess, function (req, res, next) {
     logger.info("Book GET All Call");
+    sdc.counter('Get all books')
     sql.query(sqlStatement.getAllBookSQL(), function (err, result, fields) {
         if (err) {
             logger.error(err);
@@ -241,6 +246,7 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
 
 router.put('/', authorization.checkAccess, function (req, res, next) {
     logger.info("Book PUT Call");
+    sdc.counter('Update book (PUT)')
     let bookID = req.body.id;
     let title = req.body.title;
     let author = req.body.author;
@@ -277,6 +283,7 @@ router.put('/', authorization.checkAccess, function (req, res, next) {
 
 router.post('/:id/image', authorization.checkAccess, upload.single('file'), function (req, res, next) {
     logger.info("Book image POST Call");
+    sdc.counter('Post Image')
     let id = uuidv4();
     let bookid = req.params.id;
     if (req.file.contentType == 'image/jpeg' || req.file.contentType == 'image/png' || req.file.contentType == 'image/jpg' || req.file.mimetype == 'image/jpeg' || req.file.mimetype == 'image/jpg' || req.file.mimetype == 'image/png') {
@@ -353,6 +360,7 @@ router.post('/:id/image', authorization.checkAccess, upload.single('file'), func
 
 router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, res, next) {
     logger.info("Book image GET of ID Call");
+    sdc.counter('Get image')
     let bookid = req.params.bookid;
     let imageid = req.params.imageid;
     if (bookid == null || imageid == null) {
@@ -408,6 +416,7 @@ router.get('/:bookid/image/:imageid', authorization.checkAccess, function (req, 
 
 router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('file'), function (req, res, next) {
     logger.info("Book image PUT of ID Call");
+    sdc.counter('Update image')
     let bookid = req.params.bookid;
     let imageid = req.params.imageid;
     if (req.file.contentType == 'image/jpeg' || req.file.contentType == 'image/png' || req.file.contentType == 'image/jpg' || req.file.mimetype == 'image/jpeg' || req.file.mimetype == 'image/jpg' || req.file.mimetype == 'image/png') {
@@ -509,6 +518,7 @@ router.put('/:bookid/image/:imageid', authorization.checkAccess, upload.single('
 
 router.delete('/:bookid/image/:imageid', authorization.checkAccess, function (req, res, next) {
     logger.info("Book image DELETE of ID Call");
+    sdc.counter('Delete image')
     let imageid = req.params.imageid;
     let bookid = req.params.bookid;
     if (bookid == null) {
