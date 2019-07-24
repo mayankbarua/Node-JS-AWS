@@ -28,14 +28,17 @@ router.post('/users/register',function(req, res, next) {
       if(validator.validatePassword(password)){
         sql.query(sqlStatement.getUserByEmail(username),function(err,result,fields){
           if (err){
+            logger.error(err);
             throw err;
             res.status(200).json(result);
           }
           else{
             if(result[0] == null) {
-
               sql.query(sqlStatement.getAddUserSQL(username, password), function (err, result, fields) {
-                if (err) throw err;
+                if (err) {
+                  logger.error(err);
+                  throw err;
+                }
                 res.status(201).json({
                   "message" : "Account Created Successfully"
                 });
