@@ -1,8 +1,7 @@
 {
   "agent": {
     "metrics_collection_interval": 10,
-    "logfile": "/var/logs/amazon-cloudwatch-agent.log",
-    "run_as_user": "centos"
+    "logfile": "/var/logs/amazon-cloudwatch-agent.log"
   },
   "logs": {
     "logs_collected": {
