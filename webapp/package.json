@@ -7,6 +7,7 @@
     "test": "mocha --timeout 10000"
   },
   "dependencies": {
+    "app-root-path": "^2.2.1",
     "aws-sdk": "^2.482.0",
     "bcrypt": "^3.0.6",
     "body-parser": "^1.19.0",
@@ -28,6 +29,7 @@
     "nodemon": "^1.19.1",
     "pug": "2.0.0-beta11",
     "regex": "^0.1.1",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "winston": "^3.2.1"
   }
 }

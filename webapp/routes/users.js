@@ -5,12 +5,14 @@ const sql = require('../db.js');
 const SQL = require('../service/sql.js')
 const Validator = require('../service/validator');
 const authorization = require('../service/authorization');
+const logger = require('../config/winston')
 
 const sqlStatement = new SQL();
 const validator = new Validator();
 
 
 router.get('/', authorization.checkAccess, function (req,res,next){
+  logger.info("User GET Call");
   res.status(200).json({
     "message":"Hello... Today's date is : "+new Date()
   });
@@ -18,6 +20,7 @@ router.get('/', authorization.checkAccess, function (req,res,next){
 
 
 router.post('/users/register',function(req, res, next) {
+  logger.info("User Register Call");
   let username = req.body.username;
   let password = req.body.password;
   if(username !=null && password !=null){
@@ -25,14 +28,17 @@ router.post('/users/register',function(req, res, next) {
       if(validator.validatePassword(password)){
         sql.query(sqlStatement.getUserByEmail(username),function(err,result,fields){
           if (err){
+            logger.error(err);
             throw err;
             res.status(200).json(result);
           }
           else{
             if(result[0] == null) {
-
               sql.query(sqlStatement.getAddUserSQL(username, password), function (err, result, fields) {
-                if (err) throw err;
+                if (err) {
+                  logger.error(err);
+                  throw err;
+                }
                 res.status(201).json({
                   "message" : "Account Created Successfully"
                 });

@@ -4,3 +4,4 @@
 /public/images/*.jpg
 /public/images/*.gif
 /.env
+/logs
