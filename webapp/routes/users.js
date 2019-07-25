@@ -6,6 +6,8 @@ const SQL = require('../service/sql.js')
 const Validator = require('../service/validator');
 const authorization = require('../service/authorization');
 const logger = require('../config/winston')
+const SDC = require('statsd-client'), sdc = new SDC({host: 'localhost', port: 8125});
+
 
 const sqlStatement = new SQL();
 const validator = new Validator();
@@ -13,6 +15,7 @@ const validator = new Validator();
 
 router.get('/', authorization.checkAccess, function (req,res,next){
   logger.info("User GET Call");
+  sdc.increment('GET User (time)');
   res.status(200).json({
     "message":"Hello... Today's date is : "+new Date()
   });
@@ -21,6 +24,7 @@ router.get('/', authorization.checkAccess, function (req,res,next){
 
 router.post('/users/register',function(req, res, next) {
   logger.info("User Register Call");
+  sdc.increment('POST user');
   let username = req.body.username;
   let password = req.body.password;
   if(username !=null && password !=null){
