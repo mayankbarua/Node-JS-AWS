@@ -154,6 +154,102 @@ router.delete('/:id', authorization.checkAccess, function (req, res, next) {
             message: 'Missing Parameters. Bad Request'
         });
     } else {
+2
+        sql.query(sqlStatement.getBookById(id), function (err, result) {
+            if (result[0] == null) {
+                res.status(404).json({
+                    message: 'No book found with given id'
+                })
+            } else {
+                imageid = result[0].image_id
+                if (imageid != null) {
+                    sql.query(sqlStatement.getBookImageSQLById(imageid), function (err, result, fields) {
+                        if (err) {
+                            logger.error(err);
+                            res.status(500).json({
+                                message: "SQL error while searching image",
+                                error: err
+                            });}
+                        else {
+                            if (result[0] == null) // if image not found for given imageid then delete book and return
+                                sql.query(sqlStatement.deleteBookById(id), function (err, result) {
+                                    if (result.affectedRows === 0) {
+                                        res.status(404).json({
+                                            message: 'No book found with given id'
+                                        })
+                                    } else {
+                                        res.status(204).json({
+                                            message: 'Book Deleted'
+                                        });
+                                    }
+                                })
+                            else {
+                                if (process.env.NODE_ENV == 'production') {
+                                    let params = {
+                                        Bucket: bucket,
+                                        Key: result[0].url
+                                    };
+                                    s3.deleteObject(params, function (err, data) {
+                                        if (err) {
+                                            logger.error(err);
+                                            res.status(500).json({
+                                                message: "S3 error while deleting image",
+                                                error: err
+                                            });}
+                                        else {
+                                            sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
+                                                if (err) {
+                                                    logger.error(err);
+                                                    res.status(500).json({
+                                                        message: "Delete form S3, SQL error in Image table",
+                                                        error: err
+                                                    });}
+                                                else {
+                                                    sql.query(sqlStatement.deleteBookById(id), function (err, result) {
+                                                        if (result.affectedRows === 0) {
+                                                            res.status(404).json({
+                                                                message: 'No book found with given id'
+                                                            })
+                                                        } else {
+                                                            res.status(204).json({
+                                                                message: 'Book Deleted'
+                                                            });
+                                                        }
+                                                    })
+                                                }
+                                            })
+                                        }
+                                    });
+                                } else {
+                                    sql.query(sqlStatement.deleteImageById(imageid), [imageid], function (err, result) {
+                                        if (err) {
+                                            logger.error(err);
+                                            res.status(500).json({
+                                                message: "SQL error",
+                                                error: err
+                                            });}
+                                        else {
+                                            sql.query(sqlStatement.deleteBookById(id), function (err, result) {
+                                                if (result.affectedRows === 0) {
+                                                    res.status(404).json({
+                                                        message: 'No book found with given id'
+                                                    })
+                                                } else {
+                                                    res.status(204).json({
+                                                        message: 'Book Deleted'
+                                                    });
+                                                }
+                                            })
+                                        }
+                                    })
+                                }
+                            }
+                        }
+                    })
+                }
+            }
+        });
+
         sql.query(sqlStatement.deleteBookById(id), function (err, result) {
             if (result.affectedRows === 0) {
                 res.status(404).json({
