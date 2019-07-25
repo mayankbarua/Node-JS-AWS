@@ -8,7 +8,7 @@ const uuidv4 = require('uuid/v4');
 const aws = require('aws-sdk');
 const multerS3 = require('multer-s3');
 const logger = require('../config/winston')
-const SDC = require('statsd-client'), sdc = new SDC({});
+const SDC = require('statsd-client'), sdc = new SDC({host: 'localhost', port: 8125});
 
 const sqlStatement = new SQL();
 
