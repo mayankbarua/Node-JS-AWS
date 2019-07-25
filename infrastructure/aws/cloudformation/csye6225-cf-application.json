@@ -148,6 +148,9 @@
             }
           ]
         },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        ],
         "RoleName": "CodeDeployEC2ServiceRole"
       }
     },
@@ -410,6 +413,8 @@
       }
     }
   },
+
+
   "Outputs": {
   },
   "AWSTemplateFormatVersion": "2010-09-09"
