@@ -4,6 +4,12 @@ os: linux
 files:
   - source: ./
     destination: /home/centos
+permisions:
+  -object: /home/centos
+   owner: centos
+   group: centos
+   mode: 700
+
 
 hooks:
   ApplcationStop:
