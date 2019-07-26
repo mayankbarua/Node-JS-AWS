@@ -154,7 +154,7 @@ router.delete('/:id', authorization.checkAccess, function (req, res, next) {
             message: 'Missing Parameters. Bad Request'
         });
     } else {
-2
+
         sql.query(sqlStatement.getBookById(id), function (err, result) {
             if (result[0] == null) {
                 res.status(404).json({
