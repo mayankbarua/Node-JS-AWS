@@ -154,7 +154,7 @@ router.delete('/:id', authorization.checkAccess, function (req, res, next) {
             message: 'Missing Parameters. Bad Request'
         });
     } else {
-2
+
         sql.query(sqlStatement.getBookById(id), function (err, result) {
             if (result[0] == null) {
                 res.status(404).json({
@@ -247,20 +247,21 @@ router.delete('/:id', authorization.checkAccess, function (req, res, next) {
                         }
                     })
                 }
+                else{
+                    sql.query(sqlStatement.deleteBookById(id), function (err, result) {
+                        if (result.affectedRows === 0) {
+                            res.status(404).json({
+                                message: 'No book found with given id'
+                            })
+                        } else {
+                            res.status(204).json({
+                                message: 'Book Deleted'
+                            });
+                        }
+                    })
+                }
             }
         });
-
-        sql.query(sqlStatement.deleteBookById(id), function (err, result) {
-            if (result.affectedRows === 0) {
-                res.status(404).json({
-                    message: 'No book found with given id'
-                })
-            } else {
-                res.status(204).json({
-                    message: 'Book Deleted'
-                });
-            }
-        })
     }
 });
 
