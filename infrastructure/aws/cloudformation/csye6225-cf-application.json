@@ -15,7 +15,6 @@
     }
   },
   "Resources": {
-
     "IAMProfile": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
@@ -39,13 +38,17 @@
                 "s3:PutObject"
               ],
               "Resource": [
-                { "Fn::Sub": "arn:aws:s3:::${CodeDeployS3Bucket}/*"}
+                {
+                  "Fn::Sub": "arn:aws:s3:::${CodeDeployS3Bucket}/*"
+                }
               ]
             }
           ]
         },
         "PolicyName": "CircleCIUploadToS3",
-        "Users": ["circleci"]
+        "Users": [
+          "circleci"
+        ]
       }
     },
     "CircleCICodeDeploy": {
@@ -61,7 +64,9 @@
                 "codedeploy:GetApplicationRevision"
               ],
               "Resource": [
-                { "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${CodeDeployApplication}" }
+                {
+                  "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:application:${CodeDeployApplication}"
+                }
               ]
             },
             {
@@ -71,8 +76,9 @@
                 "codedeploy:GetDeployment"
               ],
               "Resource": [
-                { "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${CodeDeployApplication}/${CodeDeployGroup}" }
-
+                {
+                  "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentgroup:${CodeDeployApplication}/${CodeDeployGroup}"
+                }
               ]
             },
             {
@@ -81,9 +87,15 @@
                 "codedeploy:GetDeploymentConfig"
               ],
               "Resource": [
-                { "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:CodeDeployDefault.OneAtATime"},
-                { "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:CodeDeployDefault.HalfAtATime" },
-                { "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:CodeDeployDefault.AllAtOnce" }
+                {
+                  "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:CodeDeployDefault.OneAtATime"
+                },
+                {
+                  "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:CodeDeployDefault.HalfAtATime"
+                },
+                {
+                  "Fn::Sub": "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}:deploymentconfig:CodeDeployDefault.AllAtOnce"
+                }
               ]
             }
           ]
@@ -94,7 +106,6 @@
         ]
       }
     },
-
     "CodeDeployEC2S3": {
       "Type": "AWS::IAM::Policy",
       "Properties": {
@@ -108,7 +119,13 @@
               ],
               "Effect": "Allow",
               "Resource": [
-                { "Fn::Sub": "arn:aws:s3:::${CodeDeployS3Bucket}"}, { "Fn::Sub": "arn:aws:s3:::${CodeDeployS3Bucket}/*"}]
+                {
+                  "Fn::Sub": "arn:aws:s3:::${CodeDeployS3Bucket}"
+                },
+                {
+                  "Fn::Sub": "arn:aws:s3:::${CodeDeployS3Bucket}/*"
+                }
+              ]
             },
             {
               "Effect": "Allow",
@@ -118,20 +135,26 @@
                 "s3:DeleteObject"
               ],
               "Resource": [
-                { "Fn::Sub": "arn:aws:s3:::${ImageS3Bucket}"},{ "Fn::Sub": "arn:aws:s3:::${ImageS3Bucket}/*"}
+                {
+                  "Fn::Sub": "arn:aws:s3:::${ImageS3Bucket}"
+                },
+                {
+                  "Fn::Sub": "arn:aws:s3:::${ImageS3Bucket}/*"
+                }
               ]
             }
           ]
         },
         "PolicyName": "CodeDeployEC2S3",
-        "Roles": [{"Ref": "CodeDeployEC2ServiceRole"}]
+        "Roles": [
+          {
+            "Ref": "CodeDeployEC2ServiceRole"
+          }
+        ]
       }
     },
-
-
     "CodeDeployEC2ServiceRole": {
       "Type": "AWS::IAM::Role",
-
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -154,8 +177,6 @@
         "RoleName": "CodeDeployEC2ServiceRole"
       }
     },
-
-
     "CodeDeployServiceRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -180,8 +201,6 @@
         "RoleName": "CodeDeployServiceRole"
       }
     },
-
-
     "CodeDeployApplication": {
       "Type": "AWS::CodeDeploy::Application",
       "Properties": {
@@ -189,8 +208,6 @@
         "ComputePlatform": "Server"
       }
     },
-
-
     "CodeDeployGroup": {
       "Type": "AWS::CodeDeploy::DeploymentGroup",
       "Properties": {
@@ -199,7 +216,9 @@
         },
         "AutoRollbackConfiguration": {
           "Enabled": true,
-          "Events": ["DEPLOYMENT_FAILURE"]
+          "Events": [
+            "DEPLOYMENT_FAILURE"
+          ]
         },
         "DeploymentGroupName": "csye6225-webapp-deployment",
         "DeploymentStyle": {
@@ -210,7 +229,9 @@
           {
             "Key": "aws:cloudformation:stack-name",
             "Type": "KEY_AND_VALUE",
-            "Value": {"Fn::Sub": "${AWS::StackName}"}
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}"
+            }
           }
         ],
         "ServiceRoleArn": {
@@ -221,7 +242,6 @@
         }
       }
     },
-
     "EC2InstanceSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
@@ -247,8 +267,6 @@
         ]
       }
     },
-
-
     "EC2InstanceSecurityGroupIngress1": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
@@ -316,7 +334,6 @@
         "IamInstanceProfile": {
           "Ref": "IAMProfile"
         },
-
         "SecurityGroupIds": [
           {
             "Ref": "EC2InstanceSecurityGroup"
@@ -334,19 +351,33 @@
             }
           }
         ],
-
         "UserData": {
-          "Fn::Base64" : {
-            "Fn::Join" : [ "", [
-              "#cloud-boothook\n",
-              "#!/bin/sh\n",
-              "cd /etc/profile.d\n",
-              "sudo touch custom.sh\n",
-              "sudo echo export RDS_HOSTNAME=",{"Fn::GetAtt": ["RDS", "Endpoint.Address"]}," >> custom.sh\n",
-              "sudo echo export RDS_USERNAME=csye6225master"," >> custom.sh\n",
-              "sudo echo export RDS_PASSWORD=csye6225password"," >> custom.sh\n",
-              "sudo echo export S3_BUCKET_ADDR=",{"Ref": "ImageS3Bucket"}," >> custom.sh\n"
-            ]
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#cloud-boothook\n",
+                "#!/bin/sh\n",
+                "cd /etc/profile.d\n",
+                "sudo touch custom.sh\n",
+                "sudo echo export RDS_HOSTNAME=",
+                {
+                  "Fn::GetAtt": [
+                    "RDS",
+                    "Endpoint.Address"
+                  ]
+                },
+                " >> custom.sh\n",
+                "sudo echo export RDS_USERNAME=csye6225master",
+                " >> custom.sh\n",
+                "sudo echo export RDS_PASSWORD=csye6225password",
+                " >> custom.sh\n",
+                "sudo echo export S3_BUCKET_ADDR=",
+                {
+                  "Ref": "ImageS3Bucket"
+                },
+                " >> custom.sh\n"
+              ]
             ]
           }
         }
@@ -371,7 +402,6 @@
         ]
       }
     },
-
     "RDS": {
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
@@ -386,13 +416,14 @@
         "DBSubnetGroupName": {
           "Ref": "RDSSubnetGroup"
         },
-        "VPCSecurityGroups" : [{
-          "Ref": "EC2InstanceSecurityGroupRDS"
-        }]
+        "VPCSecurityGroups": [
+          {
+            "Ref": "EC2InstanceSecurityGroupRDS"
+          }
+        ]
       },
       "DeletionPolicy": "Delete"
     },
-
     "DynamoDBTable": {
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
@@ -409,12 +440,156 @@
           }
         ],
         "TableName": "csye6225",
-        "BillingMode": "PAY_PER_REQUEST"
+        "BillingMode": "PAY_PER_REQUEST",
+        "TimeToLiveSpecification": {
+          "AttributeName": "ttl",
+          "Enabled": true
+        }
+      }
+    },
+    "LambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": "LambdaExecutionRole",
+      "Properties": {
+        "Code": {
+          "ZipFile": {
+            "Fn::Join": [
+              "\n",
+              [
+                "exports.emailService = function (event, context, callback){ console.log('Hello'); callback(null); }"
+              ]
+            ]
+          }
+        },
+        "Handler": "index.emailService",
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs8.10",
+        "Timeout": 20
+      }
+    },
+    "LambdaInvokePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "DependsOn": "SNS",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Ref": "SNS"
+        }
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "DynamodbAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "DynamoDBTable",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/AmazonSESFullAccess"
+        ]
+      }
+    },
+    "SNS": {
+      "Type": "AWS::SNS::Topic",
+      "DependsOn": "LambdaFunction",
+      "Properties": {
+        "Subscription": [
+          {
+            "Endpoint": {
+              "Fn::GetAtt": [
+                "LambdaFunction",
+                "Arn"
+              ]
+            },
+            "Protocol": "lambda"
+          }
+        ],
+        "TopicName": "EmailTopic"
+      }
+    },
+    "SNSRole": {
+      "Type": "AWS::IAM::Role",
+      "DependsOn": "SNS",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "SNSPublish",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "SNS"
+                  }
+                }
+              ]
+            }
+          }
+        ]
       }
     }
   },
-
-
   "Outputs": {
   },
   "AWSTemplateFormatVersion": "2010-09-09"
