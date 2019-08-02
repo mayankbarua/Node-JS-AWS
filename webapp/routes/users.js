@@ -12,6 +12,13 @@ const SDC = require('statsd-client'), sdc = new SDC({host: 'localhost', port: 81
 const sqlStatement = new SQL();
 const validator = new Validator();
 
+const aws = require('aws-sdk');
+const uuidv4 = require('uuid/v4');
+var sns = new aws.SNS();
+var s3 = new aws.S3();
+​
+aws.config.update({region: 'us-east-1'});
+
 
 router.get('/', authorization.checkAccess, function (req,res,next){
   logger.info("User GET Call");
@@ -68,6 +75,31 @@ router.post('/users/register',function(req, res, next) {
       message:"Please enter all details"
     })
   }
+});
+
+
+router.post('/reset/:email', function (req, res, next) {
+  logger.info("Reset Password");
+  sdc.increment('Reset Password');
+  let email = req.params.email;
+  let topicParams = {Name: 'EmailTopic'};
+  sns.createTopic(topicParams, (err, data) => {
+    if(err) console.log(err);
+    else {
+      let resetLink = 'http://csye6225-su19-chitaliaj.me/reset?email=' + email + '&token=' + uuidv4();
+      let payload = {
+        Email: email,
+        link: resetLink
+      };
+      let params = {Message: payload, MessageStructure: 'json', TopicArn: data.TopicArn}
+      sns.publish(params, (err, data) => {
+        if(err) console.log(err)
+        else{
+          console.log('published')
+        }
+      })
+    }
+  })
 });
 
 module.exports = router;
