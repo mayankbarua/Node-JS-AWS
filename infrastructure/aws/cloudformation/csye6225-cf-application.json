@@ -155,6 +155,7 @@
     },
     "CodeDeployEC2ServiceRole": {
       "Type": "AWS::IAM::Role",
+      "DependsOn": "SNS",
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -171,6 +172,25 @@
             }
           ]
         },
+        "Policies": [
+          {
+            "PolicyName": "SNSPublish",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "SNS"
+                  }
+                }
+              ]
+            }
+          }
+        ],
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
         ],
@@ -550,43 +570,6 @@
           }
         ],
         "TopicName": "EmailTopic"
-      }
-    },
-    "SNSRole": {
-      "Type": "AWS::IAM::Role",
-      "DependsOn": "SNS",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "ec2.amazonaws.com"
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyName": "SNSPublish",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "SNS"
-                  }
-                }
-              ]
-            }
-          }
-        ]
       }
     }
   },

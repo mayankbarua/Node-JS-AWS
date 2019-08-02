@@ -13,12 +13,10 @@ const sqlStatement = new SQL();
 const validator = new Validator();
 
 const aws = require('aws-sdk');
-const uuidv4 = require('uuid/v4');
-var sns = new aws.SNS();
-var s3 = new aws.S3();
-​
 aws.config.update({region: 'us-east-1'});
-
+const uuidv4 = require('uuid/v4');
+var sns = new aws.SNS({});
+var s3 = new aws.S3();
 
 router.get('/', authorization.checkAccess, function (req,res,next){
   logger.info("User GET Call");
