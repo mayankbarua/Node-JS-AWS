@@ -95,7 +95,7 @@ router.post('/reset/:email', function (req, res, next) {
                 sns.createTopic(topicParams, (err, data) => {
                     if (err) console.log(err);
                     else {
-                        let resetLink = process.env.DOMAIN_NAME + email + '&token=' + uuidv4();
+                        let resetLink = 'http://'+process.env.DOMAIN_NAME+'?email=' + email + '&token=' + uuidv4();
                         let payload = {
                             default: 'Hello World',
                             data: {
