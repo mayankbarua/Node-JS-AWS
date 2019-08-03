@@ -82,24 +82,45 @@ router.post('/reset/:email', function (req, res, next) {
   logger.info("Reset Password");
   sdc.increment('Reset Password');
   let email = req.params.email;
-  let topicParams = {Name: 'EmailTopic'};
-  sns.createTopic(topicParams, (err, data) => {
-    if(err) console.log(err);
-    else {
-      let resetLink = 'http://csye6225-su19-chitaliaj.me/reset?email=' + email + '&token=' + uuidv4();
-      let payload = {
-        Email: email,
-        link: resetLink
-      };
-      let params = {Message: payload, MessageStructure: 'json', TopicArn: data.TopicArn}
-      sns.publish(params, (err, data) => {
-        if(err) console.log(err)
-        else{
-          console.log('published')
-        }
-      })
+
+
+  sql.query(sqlStatement.getUserByEmail(email), function (err, result) {
+    if (err) {
+      logger.error(err);
+      throw err;
     }
-  })
+    else{
+      if(result[0] == null){
+        res.status(400).json({
+          "message" : "No EmailID found in database"
+        });
+      }
+      else{
+        let topicParams = {Name: 'EmailTopic'};
+        sns.createTopic(topicParams, (err, data) => {
+          if(err) console.log(err);
+          else {
+            let resetLink = 'http://csye6225-su19-chitaliaj.me/reset?email=' + email + '&token=' + uuidv4();
+            let payload = {
+              Email: email,
+              link: resetLink
+            };
+            let params = {Message: payload, MessageStructure: 'json', TopicArn: data.TopicArn}
+            sns.publish(params, (err, data) => {
+              if(err) console.log(err)
+              else{
+                console.log('published')
+              }
+            })
+          }
+        })
+        res.status(201).json({
+          "message" : "Reset password link sent on email Successfully!"
+        });
+      }
+    }
+
+  });
 });
 
 module.exports = router;
