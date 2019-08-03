@@ -12,6 +12,9 @@
     },
     "ImageS3Bucket": {
       "Type": "String"
+    },
+    "DomainName": {
+      "Type": "String"
     }
   },
   "Resources": {
@@ -40,6 +43,32 @@
               "Resource": [
                 {
                   "Fn::Sub": "arn:aws:s3:::${CodeDeployS3Bucket}/*"
+                }
+              ]
+            }
+          ]
+        },
+        "PolicyName": "CircleCIUploadToS3",
+        "Users": [
+          "circleci"
+        ]
+      }
+    },
+    "CircleCILambdaRole": {
+      "Type": "AWS::IAM::Policy",
+      "DependsOn": "LambdaFunction",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:*"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:EmailService"
                 }
               ]
             }
@@ -155,6 +184,7 @@
     },
     "CodeDeployEC2ServiceRole": {
       "Type": "AWS::IAM::Role",
+      "DependsOn": "SNS",
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -172,7 +202,8 @@
           ]
         },
         "ManagedPolicyArns": [
-          "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+          "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+          "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
         ],
         "RoleName": "CodeDeployEC2ServiceRole"
       }
@@ -376,7 +407,8 @@
                 {
                   "Ref": "ImageS3Bucket"
                 },
-                " >> custom.sh\n"
+                " >> custom.sh\n",
+                "sudo echo export DOMAIN_NAME=", {"Ref": "DomainName"}, ">> custom.sh\n"
               ]
             ]
           }
@@ -461,7 +493,9 @@
             ]
           }
         },
+        "FunctionName":"EmailService",
         "Handler": "index.emailService",
+        "Environment" : {"Variables": {"DOMAIN_NAME":{"Fn::Sub": "${DomainName}"}}},
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",
@@ -504,33 +538,10 @@
             }
           ]
         },
-        "Policies": [
-          {
-            "PolicyName": "DynamodbAccess",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "dynamodb:PutItem",
-                    "dynamodb:UpdateItem",
-                    "dynamodb:DeleteItem"
-                  ],
-                  "Resource": {
-                    "Fn::GetAtt": [
-                      "DynamoDBTable",
-                      "Arn"
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        ],
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          "arn:aws:iam::aws:policy/AmazonSESFullAccess"
+          "arn:aws:iam::aws:policy/AmazonSESFullAccess",
+          "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
         ]
       }
     },
@@ -550,43 +561,6 @@
           }
         ],
         "TopicName": "EmailTopic"
-      }
-    },
-    "SNSRole": {
-      "Type": "AWS::IAM::Role",
-      "DependsOn": "SNS",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "ec2.amazonaws.com"
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyName": "SNSPublish",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "SNS"
-                  }
-                }
-              ]
-            }
-          }
-        ]
       }
     }
   },
