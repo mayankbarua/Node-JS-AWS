@@ -74,7 +74,7 @@
             }
           ]
         },
-        "PolicyName": "CircleCIUploadToS3",
+        "PolicyName": "CircleCILambdaRole",
         "Users": [
           "circleci"
         ]
