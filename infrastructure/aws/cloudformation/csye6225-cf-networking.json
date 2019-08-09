@@ -241,6 +241,15 @@
         "Name": {"Fn::Sub": "${AWS::StackName}-VPC" }
       }
     },
+    "Region": {
+      "Description": "Region",
+      "Value": {
+        "Ref": "Region"
+      },
+      "Export": {
+        "Name": {"Fn::Sub": "${AWS::StackName}-Region" }
+      }
+    },
     "Subnet1": {
       "Description": "Subnet 01",
       "Value": {
