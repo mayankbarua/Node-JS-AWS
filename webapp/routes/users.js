@@ -27,8 +27,6 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
 });
 
 router.get('/check', function (req, res, next) {
-    logger.info("Check Status Call");
-    sdc.increment('GET User (time)');
     res.status(200).json({
         "message": "Check Successful"
     });
