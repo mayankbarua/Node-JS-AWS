@@ -268,6 +268,7 @@
             }
           }
         ],
+        "AutoScalingGroups" : [ {"Ref": "WebServerGroup" }],
         "ServiceRoleArn": {
           "Fn::GetAtt": [
             "CodeDeployServiceRole",
