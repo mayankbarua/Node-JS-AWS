@@ -26,6 +26,12 @@ router.get('/', authorization.checkAccess, function (req, res, next) {
     });
 });
 
+router.get('/check', function (req, res, next) {
+    res.status(200).json({
+        "message": "Check Successful"
+    });
+});
+
 
 router.post('/users/register', function (req, res, next) {
     logger.info("User Register Call");
@@ -124,5 +130,20 @@ router.post('/reset/:email', function (req, res, next) {
 
     });
 });
+
+router.delete('/deleteAllUsers',function (req, res, next){
+    sql.query(sqlStatement.deteleAllUsers(), function (err, result) {
+        if (err) {
+            logger.error(err);
+            throw err;
+        } else {
+            res.status(204).json({
+                "message": "Data Deleted Successfully"
+            });
+        }
+    })
+});
+
+
 
 module.exports = router;

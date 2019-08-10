@@ -79,6 +79,11 @@ class SQL {
         return sql;
     }
 
+    deteleAllUsers(){
+        let sql = `Delete from user`;
+        return sql;
+    }
+
 }
 
 

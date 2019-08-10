@@ -15,7 +15,8 @@ then
 	echo "Please enter all parameters in order ( Stack Name, AMI id, Networking Stack Name, CodeDeploy S3 Bucket, Image store s3 Bucket )"
 	exit 1
 else
-	aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://csye6225-cf-application.json --parameters ParameterKey=AMIid,ParameterValue=$AMI_ID ParameterKey=NetworkStackName,ParameterValue=$NETWORKING_STACK_NAME ParameterKey=CodeDeployS3Bucket,ParameterValue=$CODEDEPLOY_S3 ParameterKey=ImageS3Bucket,ParameterValue=$IMAGE_S3 ParameterKey=DomainName,ParameterValue=$DOMAIN --capabilities CAPABILITY_NAMED_IAM
+    CERTIFICATE=$(aws acm list-certificates --query 'CertificateSummaryList[0].CertificateArn' --output text)
+	aws cloudformation create-stack --stack-name $STACK_NAME --template-body file://csye6225-cf-auto-scaling-application.json --parameters ParameterKey=AMIid,ParameterValue=$AMI_ID ParameterKey=NetworkStackName,ParameterValue=$NETWORKING_STACK_NAME ParameterKey=CodeDeployS3Bucket,ParameterValue=$CODEDEPLOY_S3 ParameterKey=ImageS3Bucket,ParameterValue=$IMAGE_S3 ParameterKey=DomainName,ParameterValue=$DOMAIN ParameterKey=Certificate,ParameterValue=$CERTIFICATE --capabilities CAPABILITY_NAMED_IAM
     if [ $? -eq 0 ]; then
         aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
         if [ $? -eq 0 ]; then
