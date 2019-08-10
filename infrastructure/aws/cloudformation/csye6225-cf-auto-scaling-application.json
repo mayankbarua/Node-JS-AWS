@@ -353,7 +353,9 @@
                   "Ref": "ImageS3Bucket"
                 },
                 " >> custom.sh\n",
-                "sudo echo export DOMAIN_NAME=", {"Ref": "DomainName"}, ">> custom.sh\n"
+                "sudo echo export DOMAIN_NAME=", {"Ref": "DomainName"}, ">> custom.sh\n",
+                "cd ~\n",
+                "touch checkFile.sh\n"
               ]
             ]
           }
