@@ -532,12 +532,6 @@
           "SourceSecurityGroupId" : {"Fn::Select" : [0, {"Fn::GetAtt" : ["ElasticLoadBalancer", "SecurityGroups"]}]}
         },
         {
-          "IpProtocol": "tcp",
-          "FromPort": "22",
-          "ToPort": "22",
-          "CidrIp": "0.0.0.0/0"
-        },
-        {
           "IpProtocol" : "tcp",
           "FromPort" : "443",
           "ToPort" : "443",
@@ -569,12 +563,6 @@
       }
     },
     "SecurityGroupIngress": [
-      {
-        "IpProtocol": "tcp",
-        "FromPort": 22,
-        "ToPort": 22,
-        "CidrIp": "0.0.0.0/0"
-      },
       {
         "IpProtocol": "tcp",
         "FromPort": 3000,
