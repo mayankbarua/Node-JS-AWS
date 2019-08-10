@@ -4,7 +4,7 @@ cd home/
 FILE=checkFile.sh
 while ! test -f "$FILE"; do
     sleep 30s
-    echo "$FILE exist"
+    echo "$FILE not exist"
 done
 
 cd home/centos/webapp
