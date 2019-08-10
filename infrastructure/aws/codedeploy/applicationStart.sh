@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd home/
+cd ~
 FILE=checkFile.sh
 while ! test -f "$FILE"; do
     sleep 30s
